@@ -117,6 +117,8 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    /* Stable scrollport on desktop so wheel targets document consistently */
+    overflow-y: scroll;
   }
   body {
     width: 100%;
@@ -158,11 +160,6 @@
     margin-right: auto;
     padding-left: 1rem;
     padding-right: 1rem;
-  }
-
-  .flex {
-    min-height: 0;
-    min-width: 0;
   }
 
   @media (min-width: 640px) {

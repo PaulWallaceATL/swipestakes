@@ -2,6 +2,7 @@
 // Auth gate after 1st swipe | Background images | Swipe sounds | Live credits | Out-of-picks modal
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { usePrefersFinePointer } from "@/hooks/usePrefersFinePointer";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
 import { CheckCircle2, XCircle, Minus, Coins, RotateCcw, Trophy, Clock, Share2, Users, ChevronRight } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -576,6 +577,7 @@ function PickCard({
   const yesLabel = isOverUnder ? 'OVER' : 'YES';
   const noLabel = isOverUnder ? 'UNDER' : 'NO';
   const imageUrl = getCardImage(market);
+  const finePointer = usePrefersFinePointer();
 
   const handleDragEnd = useCallback(
     (_: any, info: any) => {
@@ -619,7 +621,11 @@ function PickCard({
 
   return (
     <motion.div
-      className="absolute inset-x-4 rounded-3xl cursor-grab active:cursor-grabbing select-none overflow-hidden"
+      className={
+        finePointer
+          ? "absolute inset-x-4 select-none overflow-hidden rounded-3xl"
+          : "absolute inset-x-4 cursor-grab select-none overflow-hidden rounded-3xl active:cursor-grabbing"
+      }
       style={{
         top: 0,
         bottom: 0,
@@ -629,12 +635,12 @@ function PickCard({
         rotate,
         zIndex: 20,
       }}
-      drag="x"
+      drag={finePointer ? false : "x"}
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       dragElastic={0.7}
       onDragEnd={handleDragEnd}
       onPointerDown={() => unlockAudio()}
-      whileTap={{ scale: 1.01 }}
+      whileTap={finePointer ? undefined : { scale: 1.01 }}
     >
       {/* Background image — always present */}
       <div

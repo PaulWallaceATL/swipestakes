@@ -13,6 +13,7 @@ import WalletPage from "./pages/WalletPage";
 import BetLogPage from "./pages/BetLogPage";
 import ProfilePage from "./pages/ProfilePage";
 import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
 import SettingsPage from "./pages/SettingsPage";
 import OnboardingFlow from "./pages/OnboardingFlow";
 import RedeemPage from "./pages/RedeemPage";
@@ -80,6 +81,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
+      <Route path="/login" component={LoginPage} />
       <Route component={AppRouter} />
     </Switch>
   );

@@ -48,8 +48,8 @@ export default function AppShell({ children }: AppShellProps) {
           overflow: 'hidden',
         }}
       >
-        {/* Page content — fills remaining space above nav */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        {/* Page content — scrolls above bottom nav */}
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain">
           {children}
         </div>
 

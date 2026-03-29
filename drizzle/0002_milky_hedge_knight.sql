@@ -1,0 +1,2 @@
+ALTER TABLE `bets` MODIFY COLUMN `source` enum('kalshi','polymarket','swipestakes') NOT NULL;--> statement-breakpoint
+ALTER TABLE `bets` MODIFY COLUMN `type` enum('sports','narrative','culture','trend','creator','ai','political','geopolitical','binary') NOT NULL DEFAULT 'sports';

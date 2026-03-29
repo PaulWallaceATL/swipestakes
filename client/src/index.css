@@ -1,0 +1,601 @@
+/* ============================================================
+   Swipestakes — Candy Crush Design System
+   Vibe: Juicy, bouncy, jewel-tone game feel
+   Palette: Deep purple bg · Electric pink · Candy teal · Gold · Lime · Coral
+   Typography: Fredoka One (display) + Nunito (body)
+   ============================================================ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Candy brand tokens */
+  --color-candy-pink:    #FF3D9A;
+  --color-candy-purple:  #8B2BE2;
+  --color-candy-teal:    #00D4AA;
+  --color-candy-gold:    #FFD700;
+  --color-candy-lime:    #A8E63D;
+  --color-candy-coral:   #FF6B6B;
+  --color-candy-sky:     #38D4FF;
+  --color-candy-orange:  #FF8C00;
+}
+
+:root {
+  --radius: 1.25rem;
+
+  /* Light background — clean white/off-white */
+  --background:          oklch(0.98 0.005 280);
+  --foreground:          oklch(0.15 0.04 280);
+  --card:                oklch(1 0 0);
+  --card-foreground:     oklch(0.15 0.04 280);
+  --popover:             oklch(1 0 0);
+  --popover-foreground:  oklch(0.15 0.04 280);
+
+  /* Primary = electric pink */
+  --primary:             oklch(0.65 0.32 340);
+  --primary-foreground:  oklch(1 0 0);
+
+  /* Secondary = soft lavender */
+  --secondary:           oklch(0.94 0.03 280);
+  --secondary-foreground: oklch(0.35 0.08 280);
+
+  --muted:               oklch(0.95 0.02 280);
+  --muted-foreground:    oklch(0.55 0.05 280);
+
+  /* Accent = candy teal */
+  --accent:              oklch(0.75 0.20 175);
+  --accent-foreground:   oklch(0.1 0.05 175);
+
+  --destructive:         oklch(0.60 0.25 15);
+  --destructive-foreground: oklch(1 0 0);
+
+  --border:              oklch(0.88 0.03 280);
+  --input:               oklch(0.92 0.02 280);
+  --ring:                oklch(0.65 0.32 340);
+
+  --chart-1: oklch(0.65 0.32 340);
+  --chart-2: oklch(0.60 0.25 175);
+  --chart-3: oklch(0.70 0.25 90);
+  --chart-4: oklch(0.60 0.28 200);
+  --chart-5: oklch(0.55 0.28 15);
+
+  --sidebar:                    oklch(0.97 0.01 280);
+  --sidebar-foreground:         oklch(0.15 0.04 280);
+  --sidebar-primary:            oklch(0.65 0.32 340);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent:             oklch(0.94 0.03 280);
+  --sidebar-accent-foreground:  oklch(0.35 0.08 280);
+  --sidebar-border:             oklch(0.88 0.03 280);
+  --sidebar-ring:               oklch(0.65 0.32 340);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Nunito', 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+      max-width: 480px;
+    }
+  }
+
+  /* ── Candy brand color utilities ── */
+  .text-candy-pink   { color: #FF3D9A; }
+  .text-candy-purple { color: #8B2BE2; }
+  .text-candy-teal   { color: #00D4AA; }
+  .text-candy-gold   { color: #FFD700; }
+  .text-candy-lime   { color: #A8E63D; }
+  .text-candy-coral  { color: #FF6B6B; }
+  .text-candy-sky    { color: #38D4FF; }
+
+  .bg-candy-pink   { background-color: #FF3D9A; }
+  .bg-candy-purple { background-color: #8B2BE2; }
+  .bg-candy-teal   { background-color: #00D4AA; }
+  .bg-candy-gold   { background-color: #FFD700; }
+  .bg-candy-lime   { background-color: #A8E63D; }
+  .bg-candy-coral  { background-color: #FF6B6B; }
+  .bg-candy-sky    { background-color: #38D4FF; }
+
+  /* ── Candy gradient backgrounds ── */
+  .candy-bg-board {
+    background: linear-gradient(160deg, #1a0a3d 0%, #2d1065 40%, #1a0a3d 100%);
+  }
+  .candy-bg-pink {
+    background: linear-gradient(135deg, #FF3D9A 0%, #FF6B6B 100%);
+  }
+  .candy-bg-teal {
+    background: linear-gradient(135deg, #00D4AA 0%, #38D4FF 100%);
+  }
+  .candy-bg-gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
+  }
+  .candy-bg-purple {
+    background: linear-gradient(135deg, #8B2BE2 0%, #5B21B6 100%);
+  }
+  .candy-bg-lime {
+    background: linear-gradient(135deg, #A8E63D 0%, #00D4AA 100%);
+  }
+
+  /* ── Gradient text ── */
+  .gradient-text-candy {
+    background: linear-gradient(135deg, #FF3D9A, #FFD700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .gradient-text-teal {
+    background: linear-gradient(135deg, #00D4AA, #38D4FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Candy card styles ── */
+  .candy-card {
+    background: oklch(0.24 0.07 280);
+    border: 2px solid oklch(0.35 0.10 280);
+    border-radius: 1.5rem;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.05) inset,
+      0 8px 32px rgba(0,0,0,0.4),
+      0 2px 8px rgba(0,0,0,0.3);
+  }
+  .candy-card-glow-pink {
+    box-shadow:
+      0 0 20px rgba(255,61,154,0.4),
+      0 8px 32px rgba(0,0,0,0.4),
+      0 0 0 2px rgba(255,61,154,0.5) inset;
+  }
+  .candy-card-glow-teal {
+    box-shadow:
+      0 0 20px rgba(0,212,170,0.4),
+      0 8px 32px rgba(0,0,0,0.4),
+      0 0 0 2px rgba(0,212,170,0.5) inset;
+  }
+  .candy-card-glow-gold {
+    box-shadow:
+      0 0 20px rgba(255,215,0,0.4),
+      0 8px 32px rgba(0,0,0,0.4),
+      0 0 0 2px rgba(255,215,0,0.5) inset;
+  }
+
+  /* ── Candy button ── */
+  .candy-btn {
+    font-family: 'Fredoka One', 'Nunito', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border-radius: 9999px;
+    padding: 0.75rem 2rem;
+    position: relative;
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.12s ease;
+    transform-origin: center bottom;
+  }
+  .candy-btn:active {
+    transform: scale(0.93) translateY(2px);
+  }
+  .candy-btn-pink {
+    background: linear-gradient(180deg, #FF5CB0 0%, #FF3D9A 50%, #D4007A 100%);
+    box-shadow:
+      0 6px 0 #9B0057,
+      0 8px 20px rgba(255,61,154,0.5);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .candy-btn-pink:active {
+    box-shadow:
+      0 2px 0 #9B0057,
+      0 4px 12px rgba(255,61,154,0.4);
+  }
+  .candy-btn-teal {
+    background: linear-gradient(180deg, #1FFFD4 0%, #00D4AA 50%, #009E7E 100%);
+    box-shadow:
+      0 6px 0 #006B55,
+      0 8px 20px rgba(0,212,170,0.5);
+    color: #003D30;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.3);
+  }
+  .candy-btn-teal:active {
+    box-shadow:
+      0 2px 0 #006B55,
+      0 4px 12px rgba(0,212,170,0.4);
+  }
+  .candy-btn-gold {
+    background: linear-gradient(180deg, #FFE84D 0%, #FFD700 50%, #CC9900 100%);
+    box-shadow:
+      0 6px 0 #8A6600,
+      0 8px 20px rgba(255,215,0,0.5);
+    color: #3D2800;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.4);
+  }
+  .candy-btn-gold:active {
+    box-shadow:
+      0 2px 0 #8A6600,
+      0 4px 12px rgba(255,215,0,0.4);
+  }
+
+  /* ── Candy pill badges ── */
+  .candy-pill {
+    border-radius: 9999px;
+    padding: 0.2rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .candy-pill-pink {
+    background: rgba(255,61,154,0.25);
+    color: #FF3D9A;
+    border: 1.5px solid rgba(255,61,154,0.5);
+  }
+  .candy-pill-teal {
+    background: rgba(0,212,170,0.2);
+    color: #00D4AA;
+    border: 1.5px solid rgba(0,212,170,0.4);
+  }
+  .candy-pill-gold {
+    background: rgba(255,215,0,0.2);
+    color: #FFD700;
+    border: 1.5px solid rgba(255,215,0,0.4);
+  }
+  .candy-pill-lime {
+    background: rgba(168,230,61,0.2);
+    color: #A8E63D;
+    border: 1.5px solid rgba(168,230,61,0.4);
+  }
+  .candy-pill-coral {
+    background: rgba(255,107,107,0.2);
+    color: #FF6B6B;
+    border: 1.5px solid rgba(255,107,107,0.4);
+  }
+  .candy-pill-sky {
+    background: rgba(56,212,255,0.2);
+    color: #38D4FF;
+    border: 1.5px solid rgba(56,212,255,0.4);
+  }
+
+  /* ── Font helpers ── */
+  .font-display {
+    font-family: 'Fredoka One', 'Nunito', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+  .font-body {
+    font-family: 'Nunito', sans-serif;
+  }
+
+  /* ── Swipe card ── */
+  .swipe-card {
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ── Candy glow effects ── */
+  .glow-pink  { filter: drop-shadow(0 0 12px rgba(255,61,154,0.7)); }
+  .glow-teal  { filter: drop-shadow(0 0 12px rgba(0,212,170,0.7)); }
+  .glow-gold  { filter: drop-shadow(0 0 12px rgba(255,215,0,0.7)); }
+
+  /* ── Candy shimmer ── */
+  .candy-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .candy-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg,
+      transparent 40%,
+      rgba(255,255,255,0.15) 50%,
+      transparent 60%
+    );
+    animation: shimmer 2.5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+
+  /* ── Bounce in ── */
+  @keyframes bounceIn {
+    0%   { transform: scale(0.7); opacity: 0; }
+    55%  { transform: scale(1.08); opacity: 1; }
+    75%  { transform: scale(0.96); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .bounce-in {
+    animation: bounceIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* ── Pop scale ── */
+  @keyframes popScale {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.18); }
+    70%  { transform: scale(0.94); }
+    100% { transform: scale(1); }
+  }
+  .pop-scale {
+    animation: popScale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Wiggle ── */
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    20%       { transform: rotate(-8deg); }
+    40%       { transform: rotate(8deg); }
+    60%       { transform: rotate(-5deg); }
+    80%       { transform: rotate(5deg); }
+  }
+  .wiggle {
+    animation: wiggle 0.5s ease-in-out;
+  }
+
+  /* ── Float up ── */
+  @keyframes floatUp {
+    0%   { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-60px) scale(0.5); opacity: 0; }
+  }
+  .float-up {
+    animation: floatUp 0.8s ease-out forwards;
+  }
+
+  /* ── Confetti particle ── */
+  @keyframes confettiFly {
+    0%   { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx,40px), var(--ty,-80px)) rotate(var(--tr,360deg)) scale(0.3); opacity: 0; }
+  }
+  .confetti-particle {
+    animation: confettiFly 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  /* ── Pulse glow ── */
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 8px rgba(255,61,154,0.4); }
+    50%       { box-shadow: 0 0 24px rgba(255,61,154,0.8), 0 0 40px rgba(255,61,154,0.3); }
+  }
+  .pulse-glow-pink {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  /* ── Streak fire ── */
+  @keyframes fireFlicker {
+    0%, 100% { transform: scaleY(1) rotate(-2deg); }
+    50%       { transform: scaleY(1.1) rotate(2deg); }
+  }
+  .fire-flicker {
+    animation: fireFlicker 0.6s ease-in-out infinite alternate;
+    display: inline-block;
+    transform-origin: bottom center;
+  }
+
+  /* ── Live pulse ── */
+  .live-pulse {
+    animation: livePulse 1.5s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+
+  /* ── Number roll ── */
+  @keyframes numberRoll {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+  }
+  .number-roll {
+    animation: numberRoll 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Shake ── */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-8px); }
+    40%       { transform: translateX(8px); }
+    60%       { transform: translateX(-5px); }
+    80%       { transform: translateX(5px); }
+  }
+  .shake {
+    animation: shake 0.4s ease-out;
+  }
+
+  /* ── Win flash ── */
+  @keyframes winFlash {
+    0%   { background: rgba(0,212,170,0); }
+    30%  { background: rgba(0,212,170,0.2); }
+    100% { background: rgba(0,212,170,0); }
+  }
+  .win-flash {
+    animation: winFlash 0.6s ease-out;
+  }
+
+  /* ── Candy progress bar ── */
+  .candy-progress {
+    background: oklch(0.28 0.07 280);
+    border-radius: 9999px;
+    overflow: hidden;
+    border: 2px solid oklch(0.35 0.09 280);
+  }
+  .candy-progress-fill {
+    background: linear-gradient(90deg, #FF3D9A, #FFD700);
+    border-radius: 9999px;
+    position: relative;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .candy-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    right: 4px;
+    height: 4px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 9999px;
+  }
+
+  /* ── Candy star rating ── */
+  .candy-star {
+    filter: drop-shadow(0 0 6px rgba(255,215,0,0.8));
+    color: #FFD700;
+  }
+  .candy-star-empty {
+    color: oklch(0.35 0.06 280);
+  }
+
+  /* ── Floating card stack ── */
+  .card-stack-1 { transform: rotate(-2deg) translateY(10px) scale(0.96); }
+  .card-stack-2 { transform: rotate(1.5deg) translateY(20px) scale(0.92); }
+
+  /* ══════════════════════════════════════════════════════
+     SPARKLE TOKEN ANIMATIONS
+     Used by SparkleToken component
+  ══════════════════════════════════════════════════════ */
+
+  /* Shimmer sweep across the token badge */
+  @keyframes token-shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  /* Twinkle: star fades in/out and scales */
+  @keyframes sparkle-twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.6) rotate(0deg); }
+    25%       { opacity: 1;   transform: scale(1.2) rotate(15deg); }
+    50%       { opacity: 0.7; transform: scale(0.9) rotate(-10deg); }
+    75%       { opacity: 1;   transform: scale(1.1) rotate(20deg); }
+  }
+
+  /* Continuous orbit around the token */
+  @keyframes sparkle-orbit {
+    0%   { transform: translate(-50%,-50%) rotate(var(--angle,0deg)) translateX(var(--distance,30px)) rotate(calc(-1 * var(--angle,0deg))) scale(0.4); opacity: 0; }
+    15%  { opacity: 1; transform: translate(-50%,-50%) rotate(calc(var(--angle,0deg) + 40deg)) translateX(var(--distance,30px)) rotate(calc(-1 * (var(--angle,0deg) + 40deg))) scale(1); }
+    85%  { opacity: 1; transform: translate(-50%,-50%) rotate(calc(var(--angle,0deg) + 320deg)) translateX(var(--distance,30px)) rotate(calc(-1 * (var(--angle,0deg) + 320deg))) scale(1); }
+    100% { transform: translate(-50%,-50%) rotate(calc(var(--angle,0deg) + 360deg)) translateX(var(--distance,30px)) rotate(calc(-1 * (var(--angle,0deg) + 360deg))) scale(0.4); opacity: 0; }
+  }
+
+  /* Burst particles fly outward in 8 directions */
+  @keyframes sparkle-burst-0 { 0% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 100% { transform: translate(calc(-50% + 0px), calc(-50% - 60px)) scale(0); opacity: 0; } }
+  @keyframes sparkle-burst-1 { 0% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 100% { transform: translate(calc(-50% + 42px), calc(-50% - 42px)) scale(0); opacity: 0; } }
+  @keyframes sparkle-burst-2 { 0% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 100% { transform: translate(calc(-50% + 60px), calc(-50% + 0px)) scale(0); opacity: 0; } }
+  @keyframes sparkle-burst-3 { 0% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 100% { transform: translate(calc(-50% + 42px), calc(-50% + 42px)) scale(0); opacity: 0; } }
+  @keyframes sparkle-burst-4 { 0% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 100% { transform: translate(calc(-50% + 0px), calc(-50% + 60px)) scale(0); opacity: 0; } }
+  @keyframes sparkle-burst-5 { 0% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 100% { transform: translate(calc(-50% - 42px), calc(-50% + 42px)) scale(0); opacity: 0; } }
+  @keyframes sparkle-burst-6 { 0% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 100% { transform: translate(calc(-50% - 60px), calc(-50% + 0px)) scale(0); opacity: 0; } }
+  @keyframes sparkle-burst-7 { 0% { transform: translate(-50%,-50%) scale(1); opacity: 1; } 100% { transform: translate(calc(-50% - 42px), calc(-50% - 42px)) scale(0); opacity: 0; } }
+
+  /* Floating star that drifts upward and fades */
+  @keyframes sparkle-float {
+    0%   { transform: translate(var(--tx,0px), 0) scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--tx,0px), -80px) scale(0.2) rotate(180deg); opacity: 0; }
+  }
+
+  /* Token pulse glow — used on the badge itself */
+  @keyframes token-pulse-gold {
+    0%, 100% { box-shadow: 0 4px 20px rgba(255,215,0,0.5), 0 0 0 2px rgba(255,215,0,0.3); }
+    50%       { box-shadow: 0 4px 30px rgba(255,215,0,0.9), 0 0 50px rgba(255,215,0,0.4), 0 0 0 3px rgba(255,215,0,0.6); }
+  }
+  @keyframes token-pulse-pink {
+    0%, 100% { box-shadow: 0 4px 20px rgba(255,61,154,0.5), 0 0 0 2px rgba(255,61,154,0.3); }
+    50%       { box-shadow: 0 4px 30px rgba(255,61,154,0.9), 0 0 50px rgba(255,61,154,0.4), 0 0 0 3px rgba(255,61,154,0.6); }
+  }
+  @keyframes token-pulse-teal {
+    0%, 100% { box-shadow: 0 4px 20px rgba(0,229,255,0.5), 0 0 0 2px rgba(0,229,255,0.3); }
+    50%       { box-shadow: 0 4px 30px rgba(0,229,255,0.9), 0 0 50px rgba(0,229,255,0.4), 0 0 0 3px rgba(0,229,255,0.6); }
+  }
+
+  .token-pulse-gold  { animation: token-pulse-gold  2.2s ease-in-out infinite; }
+  .token-pulse-pink  { animation: token-pulse-pink  2.2s ease-in-out infinite; }
+  .token-pulse-teal  { animation: token-pulse-teal  2.2s ease-in-out infinite; }
+  .sparkle-twinkle   { animation: sparkle-twinkle 1.8s ease-in-out infinite; }
+}

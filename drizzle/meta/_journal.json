@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1774568871536,
+      "tag": "0000_romantic_ozymandias",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774568946112,
+      "tag": "0001_optimal_joseph",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774570775146,
+      "tag": "0002_milky_hedge_knight",
+      "breakpoints": true
+    }
+  ]
+}

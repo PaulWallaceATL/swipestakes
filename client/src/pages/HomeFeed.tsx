@@ -966,7 +966,7 @@ export default function HomeFeed() {
   }, [refetchMarkets, refetchStatus]);
 
   return (
-    <div className="relative flex min-h-full flex-col" style={{ background: "#FFFFFF" }}>
+    <div className="relative flex flex-col" style={{ background: "#FFFFFF" }}>
       {/* ── CANDY HEADER ── */}
       <div
         className="flex-shrink-0 px-4 pt-4 pb-3"
@@ -1054,11 +1054,16 @@ export default function HomeFeed() {
         </div>
       </div>
 
-      {/* ── CARD AREA ── */}
-      <div className="flex-1 relative min-h-0" style={{ background: '#F5F5F7' }}>
+      {/* ── CARD AREA ──
+          min-height in normal flow so the page can extend past the viewport and
+          scroll (absolute children do not add to parent height). */}
+      <div
+        className="relative w-full min-h-[calc(100dvh-13rem)] shrink-0"
+        style={{ background: "#F5F5F7" }}
+      >
         {allDone && !showOutOfPicks ? (
           // Daily complete — candy celebration screen
-          <div className="flex flex-col items-center justify-center h-full px-6 text-center">
+          <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 py-12 text-center">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

@@ -30,90 +30,86 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: '#F5F5F7',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      className="fixed inset-0 flex flex-col bg-[#F5F5F7]"
+      style={{ overflow: "hidden" }}
     >
-      <div
-        className="relative flex flex-col w-full"
+      {/*
+        Full-width scroll layer so mouse wheel works on desktop even when the
+        cursor is over the gray margins (not only the 480px column).
+      */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain [-webkit-overflow-scrolling:touch]">
+        <div className="flex min-h-full w-full flex-1 justify-center">
+          <div
+            className="relative flex min-h-full w-full max-w-[480px] flex-col bg-white"
+            style={{
+              boxShadow: "0 0 0 1px #EBEBEB",
+            }}
+          >
+            <div className="flex min-h-full flex-1 flex-col">{children}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── BOTTOM NAV (fixed to viewport; not inside scroll) ── */}
+      <nav
+        className="relative z-50 flex w-full flex-shrink-0 justify-center bg-white"
         style={{
-          maxWidth: 480,
-          height: '100%',
-          background: '#FFFFFF',
-          overflow: 'hidden',
+          borderTop: "1px solid #EBEBEB",
+          boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
+          paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)",
         }}
       >
-        {/* Page content — scrolls above bottom nav */}
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain">
-          {children}
-        </div>
+        <div className="flex w-full max-w-[480px] items-center justify-around px-1 pt-2 pb-1">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive =
+              location === item.path ||
+              (location === "/" && item.path === "/feed");
 
-        {/* ── BOTTOM NAV ── */}
-        <nav
-          className="relative z-50 flex-shrink-0"
-          style={{
-            background: '#FFFFFF',
-            borderTop: '1px solid #EBEBEB',
-            boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
-            paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
-          }}
-        >
-          <div className="flex items-center justify-around px-1 pt-2 pb-1">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = location === item.path || (location === '/' && item.path === '/feed');
-
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className="relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all duration-200"
-                  style={{ minWidth: 52 }}
-                >
-                  {/* Active pill background */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="nav-indicator"
-                      className="absolute inset-0 rounded-2xl"
-                      style={{ background: `${item.activeColor}15` }}
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
-                  )}
-
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className="relative flex flex-col items-center gap-0.5 rounded-2xl px-3 py-1.5 transition-all duration-200"
+                style={{ minWidth: 52 }}
+              >
+                {isActive && (
                   <motion.div
-                    animate={isActive ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    <Icon
-                      size={22}
-                      className="relative z-10 transition-all duration-200"
-                      style={{
-                        color: isActive ? item.activeColor : '#BDBDBD',
-                        strokeWidth: isActive ? 2.5 : 1.8,
-                      }}
-                    />
-                  </motion.div>
+                    layoutId="nav-indicator"
+                    className="absolute inset-0 rounded-2xl"
+                    style={{ background: `${item.activeColor}15` }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
 
-                  <span
-                    className="relative z-10 text-[9px] font-bold transition-all duration-200"
+                <motion.div
+                  animate={isActive ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <Icon
+                    size={22}
+                    className="relative z-10 transition-all duration-200"
                     style={{
-                      fontFamily: "'Fredoka One', 'Nunito', sans-serif",
-                      color: isActive ? item.activeColor : '#BDBDBD',
+                      color: isActive ? item.activeColor : "#BDBDBD",
+                      strokeWidth: isActive ? 2.5 : 1.8,
                     }}
-                  >
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </nav>
-      </div>
+                  />
+                </motion.div>
+
+                <span
+                  className="relative z-10 text-[9px] font-bold transition-all duration-200"
+                  style={{
+                    fontFamily: "'Fredoka One', 'Nunito', sans-serif",
+                    color: isActive ? item.activeColor : "#BDBDBD",
+                  }}
+                >
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

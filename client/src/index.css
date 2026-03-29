@@ -137,6 +137,7 @@
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
+    overflow-y: auto;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),

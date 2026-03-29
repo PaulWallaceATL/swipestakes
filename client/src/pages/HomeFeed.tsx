@@ -629,7 +629,7 @@ function PickCard({
         rotate,
         zIndex: 20,
       }}
-      drag
+      drag="x"
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       dragElastic={0.7}
       onDragEnd={handleDragEnd}
@@ -966,7 +966,7 @@ export default function HomeFeed() {
   }, [refetchMarkets, refetchStatus]);
 
   return (
-    <div className="flex flex-col h-full relative" style={{ background: '#FFFFFF' }}>
+    <div className="relative flex min-h-full flex-col" style={{ background: "#FFFFFF" }}>
       {/* ── CANDY HEADER ── */}
       <div
         className="flex-shrink-0 px-4 pt-4 pb-3"

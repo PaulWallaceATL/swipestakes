@@ -41,6 +41,44 @@ export default function AppShell({ children }: AppShellProps) {
         broke because HomeFeed uses position:absolute cards that don't expand height.
       */}
       <div className="mx-auto min-h-dvh w-full max-w-[480px] bg-white shadow-[0_0_0_1px_#EBEBEB]">
+        {/* PICK5 brand strip — visible on every in-app screen */}
+        <div
+          className="sticky top-0 z-40 flex-shrink-0 px-3 py-2"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(255,245,252,0.98) 0%, rgba(245,240,255,0.98) 50%, rgba(240,253,250,0.95) 100%)",
+            borderBottom: "2px solid rgba(255,61,154,0.22)",
+            boxShadow: "0 4px 20px rgba(255,61,154,0.08)",
+          }}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-baseline gap-2 min-w-0">
+              <span
+                className="text-[1.35rem] leading-none tracking-wide text-transparent bg-clip-text"
+                style={{
+                  fontFamily: "'Chewy', cursive",
+                  backgroundImage: "linear-gradient(135deg, #FF3D9A 0%, #8B2BE2 55%, #00D4AA 100%)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                }}
+              >
+                PICK5
+              </span>
+              <span
+                className="text-[10px] font-bold uppercase tracking-wider truncate text-gray-500"
+                style={{ fontFamily: "Nunito, sans-serif" }}
+              >
+                Daily match
+              </span>
+            </div>
+            <span
+              className="text-[9px] font-bold text-right text-gray-400 leading-tight max-w-[52%]"
+              style={{ fontFamily: "Nunito, sans-serif" }}
+            >
+              5 picks · points · gift cards
+            </span>
+          </div>
+        </div>
         {children}
       </div>
 

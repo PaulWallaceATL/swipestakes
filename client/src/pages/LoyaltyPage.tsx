@@ -151,10 +151,10 @@ export default function LoyaltyPage() {
         style={{ background: 'linear-gradient(135deg, #FF3D9A 0%, #8B2BE2 100%)' }}
       >
         <h1 className="text-2xl font-bold mb-0.5 text-white" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
-          Loyalty Rewards
+          PICK5 Loyalty
         </h1>
         <p className="text-xs font-semibold text-white/70" style={{ fontFamily: 'Nunito, sans-serif' }}>
-          Earn points every day you play
+          Bonus perks for showing up and clearing boards
         </p>
       </div>
 

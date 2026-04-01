@@ -290,12 +290,17 @@ export default function ProfilePage() {
       >
         {/* Top row */}
         <div className="flex items-center justify-between mb-4">
-          <h1
-            className="text-3xl text-white"
-            style={{ fontFamily: "'Fredoka One', sans-serif" }}
-          >
-            Profile
-          </h1>
+          <div>
+            <h1
+              className="text-3xl text-white"
+              style={{ fontFamily: "'Fredoka One', sans-serif" }}
+            >
+              Profile
+            </h1>
+            <p className="text-[11px] font-semibold text-white/65 mt-0.5" style={{ fontFamily: 'Nunito, sans-serif' }}>
+              Your PICK5 home base
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleShare}

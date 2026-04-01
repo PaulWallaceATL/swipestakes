@@ -550,7 +550,7 @@ export default function RedeemPage() {
               Redeem
             </h1>
             <p className="text-xs text-gray-400 font-semibold" style={{ fontFamily: 'Nunito, sans-serif' }}>
-              Exchange credits for gift cards
+              Spend PICK5 credits on gift cards
             </p>
           </div>
           <div

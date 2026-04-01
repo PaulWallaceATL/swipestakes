@@ -75,7 +75,7 @@ export default function WalletPage() {
         }}
       >
         <p className="text-white/70 text-xs font-semibold mb-1" style={{ fontFamily: 'Nunito, sans-serif' }}>
-          Your Credits
+          Your Credits · from PICK5 wins
         </p>
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}

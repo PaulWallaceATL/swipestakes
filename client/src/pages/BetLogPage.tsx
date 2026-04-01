@@ -175,10 +175,10 @@ export default function BetLogPage() {
         style={{ background: 'linear-gradient(135deg, #FF3D9A 0%, #8B2BE2 100%)' }}
       >
         <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
-          My Results
+          PICK5 Results
         </h1>
         <p className="text-xs mt-0.5 text-white/70" style={{ fontFamily: 'Nunito, sans-serif' }}>
-          Track your daily picks and credits earned
+          How your last boards scored — and credits you unlocked
         </p>
       </div>
 

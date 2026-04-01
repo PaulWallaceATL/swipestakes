@@ -19,8 +19,8 @@ const SCREEN_URLS = {
 const FEATURES = [
   {
     emoji: '🎯',
-    title: '5 Free Picks Daily',
-    desc: 'Get 5 fresh Yes/No and Over/Under picks every day. No payment, no risk — just swipe.',
+    title: 'PICK5 every day',
+    desc: 'Five juicy prediction cards drop daily — your personal PICK5 run. No payment, no risk, just swipe.',
     color: '#FF3D9A',
     bg: 'rgba(255,61,154,0.08)',
   },
@@ -48,10 +48,10 @@ const FEATURES = [
 ];
 
 const HOW_IT_WORKS = [
-  { step: '01', title: 'Sign up free', desc: 'No credit card, no deposit. Just create an account and start playing.', emoji: '✨' },
-  { step: '02', title: 'Swipe your 5 daily picks', desc: 'Swipe right for YES/OVER, left for NO/UNDER, down to skip.', emoji: '👆' },
-  { step: '03', title: 'Earn credits for correct picks', desc: 'Results come in the next day. The better your score, the more credits you earn.', emoji: '⭐' },
-  { step: '04', title: 'Redeem for real rewards', desc: 'Cash out your credits for gift cards and real-world rewards.', emoji: '🎁' },
+  { step: '01', title: 'Sign up free', desc: 'No credit card, no deposit. Jump into your first PICK5 round in seconds.', emoji: '✨' },
+  { step: '02', title: 'Clear all 5 picks', desc: '→ YES/OVER · ← NO/UNDER · ↓ skip. Each card is one of your five — finish the board!', emoji: '👆' },
+  { step: '03', title: 'Score credits', desc: 'Nail 5/5 for the biggest payout; 4/5 and 3/5 still sweeten your wallet when results hit.', emoji: '⭐' },
+  { step: '04', title: 'Redeem gift cards', desc: 'Spend credits in the shop — Amazon, coffee, delivery, and more.', emoji: '🎁' },
 ];
 
 const CREDIT_RULES = [
@@ -201,8 +201,8 @@ export default function LandingPage() {
           >
             S
           </div>
-          <span className="text-lg font-black text-gray-800" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
-            Swipestakes
+          <span className="text-lg font-black text-gray-800" style={{ fontFamily: "'Chewy', cursive", letterSpacing: '0.04em' }}>
+            PICK5
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -246,25 +246,25 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mb-6"
             style={{ background: 'rgba(255,61,154,0.1)', color: '#FF3D9A', border: '1px solid rgba(255,61,154,0.25)' }}
           >
-            <Zap size={14} /> Free to play — no deposit ever
+            <Zap size={14} /> PICK5 — free daily match · no deposit
           </div>
 
           <h1
             className="text-5xl font-black leading-tight mb-4"
-            style={{ fontFamily: "'Fredoka One', sans-serif", letterSpacing: '-0.01em' }}
+            style={{ fontFamily: "'Chewy', cursive", letterSpacing: '0.02em' }}
           >
-            <span className="text-gray-800">Swipe picks.</span>
+            <span className="text-gray-800">Match 5 picks.</span>
             <br />
             <span style={{ background: 'linear-gradient(135deg, #FF3D9A, #8B2BE2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              Earn rewards.
+              Pop credits &amp; prizes!
             </span>
           </h1>
 
           <p
             className="text-lg mb-8 max-w-sm mx-auto text-gray-500"
-            style={{ lineHeight: 1.6 }}
+            style={{ lineHeight: 1.6, fontFamily: 'Nunito, sans-serif' }}
           >
-            5 free picks every day. Swipe yes or no. Earn credits for correct picks. Redeem for real gift cards.
+            Every day you get a <span className="font-bold text-gray-700">PICK5</span> board — swipe yes/no (or over/under), finish all five, then earn credits when results settle. Cash out for gift cards. Candy-simple.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
@@ -312,10 +312,10 @@ export default function LandingPage() {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-2xl font-bold mb-2 text-gray-800" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
-            Try it right now 👇
+            Try a mini PICK5 👇
           </h2>
-          <p className="text-sm mb-10 text-gray-400">
-            Tap YES ✓ or NO ✗ to see how it works
+          <p className="text-sm mb-10 text-gray-400" style={{ fontFamily: 'Nunito, sans-serif' }}>
+            Tap YES ✓ or NO ✗ — that’s the same energy as the real game
           </p>
           <SwipeDemo />
         </motion.div>

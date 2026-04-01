@@ -4,11 +4,12 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { usePrefersFinePointer } from "@/hooks/usePrefersFinePointer";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { CheckCircle2, XCircle, Minus, Coins, RotateCcw, Trophy, Clock, Share2, Users, ChevronRight } from "lucide-react";
+import { CheckCircle2, XCircle, Minus, Coins, RotateCcw, Trophy, Clock, Share2, Users, ChevronRight, ChevronDown } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { SparkleToken, SparkleStar } from "@/components/SparkleToken";
+import { Pick5Progress } from "@/components/Pick5Progress";
 
 // ─── SOUND ENGINE ─────────────────────────────────────────────────────────────
 // Singleton AudioContext — created once, reused for all sounds.
@@ -386,10 +387,10 @@ function AuthGateModal() {
             🎯
           </motion.div>
           <h2 className="text-3xl mb-1" style={{ fontFamily: "'Fredoka One', sans-serif", background: 'linear-gradient(135deg, #FFD700, #FF3D9A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            Pick 5 to Win!
+            PICK5 complete!
           </h2>
           <p className="text-sm leading-relaxed" style={{ fontFamily: 'Nunito, sans-serif', color: 'rgba(255,255,255,0.65)' }}>
-            You’ve made all 5 picks! Sign up free to save your parlay &amp; earn real gift card credits.
+            You crushed a full PICK5 round! Sign up free to save your picks, earn credits when results hit, and redeem for gift cards.
           </p>
         </div>
 
@@ -506,11 +507,11 @@ function OutOfPicksModal({ picksUsed, onClose }: { picksUsed: number; onClose: (
           🏆
         </motion.div>
 
-        <h2 className="text-3xl mb-1" style={{ fontFamily: "'Fredoka One', sans-serif", background: 'linear-gradient(135deg, #FFD700, #FF3D9A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-          Parlay locked in!
-        </h2>
+          <h2 className="text-3xl mb-1" style={{ fontFamily: "'Fredoka One', sans-serif", background: 'linear-gradient(135deg, #FFD700, #FF3D9A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            PICK5 locked in!
+          </h2>
         <p className="text-sm mb-1 leading-relaxed" style={{ fontFamily: 'Nunito, sans-serif', color: 'rgba(255,255,255,0.65)' }}>
-          You've used all 5 picks for today. Results drop tonight!
+          You finished today’s PICK5. Results drop tonight — credits follow how many you got right!
         </p>
         <p className="text-xs font-bold mb-5" style={{ fontFamily: 'Nunito, sans-serif', color: '#00D4AA' }}>
           Come back tomorrow for 5 fresh picks 🌅
@@ -812,28 +813,36 @@ function PickCard({
             </div>
           )}
 
-          {/* Swipe action hints */}
+          {/* Swipe action hints — Candy Crush style */}
           <div
-            className="flex items-center justify-between py-3 px-4 rounded-2xl"
+            className="flex items-center justify-between py-3 px-3 rounded-2xl"
             style={{
-              background: 'rgba(0,0,0,0.3)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.25) 100%)',
+              backdropFilter: 'blur(10px)',
+              border: '2px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 4px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15)',
             }}
           >
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.25)' }}>
-                <XCircle size={14} className="text-red-400" />
+            <div className="flex flex-col items-center gap-0.5 min-w-[4.5rem]">
+              <span className="text-lg leading-none" aria-hidden>⬅️</span>
+              <div className="flex items-center gap-1">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.35)' }}>
+                  <XCircle size={12} className="text-red-300" />
+                </div>
+                <span className="text-[10px] font-black text-red-300 uppercase" style={{ fontFamily: "'Fredoka One', sans-serif" }}>{noLabel}</span>
               </div>
-              <span className="text-xs font-bold text-red-400" style={{ fontFamily: 'Nunito, sans-serif' }}>{noLabel}</span>
             </div>
-            <span className="text-[10px] text-white/30 flex items-center gap-1" style={{ fontFamily: 'Nunito, sans-serif' }}>
-              <Minus size={10} /> skip
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-green-400" style={{ fontFamily: 'Nunito, sans-serif' }}>{yesLabel}</span>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.25)' }}>
-                <CheckCircle2 size={14} className="text-green-400" />
+            <div className="flex flex-col items-center gap-0.5 px-1">
+              <span className="text-base leading-none" aria-hidden>⬇️</span>
+              <span className="text-[9px] font-bold text-white/50 uppercase tracking-wide" style={{ fontFamily: "'Fredoka One', sans-serif" }}>skip</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5 min-w-[4.5rem]">
+              <span className="text-lg leading-none" aria-hidden>➡️</span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-black text-emerald-300 uppercase" style={{ fontFamily: "'Fredoka One', sans-serif" }}>{yesLabel}</span>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.35)' }}>
+                  <CheckCircle2 size={12} className="text-emerald-300" />
+                </div>
               </div>
             </div>
           </div>
@@ -894,6 +903,7 @@ export default function HomeFeed() {
     marketType: 'binary' | 'total' | 'player_prop';
   }>>([]);
   const [parlaySubmitted, setParlaySubmitted] = useState(false);
+  const [howPick5Open, setHowPick5Open] = useState(false);
 
   const submitParlay = trpc.credits.submitParlay.useMutation({
     onSuccess: () => {
@@ -916,6 +926,13 @@ export default function HomeFeed() {
   // Live balance from backend, 0 for guests
   const balance = isAuthenticated ? (statusData?.balance ?? 0) : 0;
   const picksLeft = isAuthenticated ? (statusData?.picksRemaining ?? 5) : Math.max(0, 5 - guestSwipesRef.current);
+
+  const sessionCompleted = isAuthenticated ? stagedPicks.length : guestSwipesRef.current;
+  const pick5RoundDone =
+    sessionCompleted >= 5 || showOutOfPicks || (allDone && !showOutOfPicks);
+  const pick5GemsFilled = pick5RoundDone ? 5 : Math.min(5, sessionCompleted);
+  const pick5ActiveGem =
+    pick5RoundDone || sessionCompleted >= 5 ? null : Math.min(5, sessionCompleted + 1);
 
   const handleSwipe = useCallback(async (choice: 'yes' | 'no' | 'over' | 'under' | 'skip', label: string, color: string) => {
     const market = displayPicks[currentIndex];
@@ -996,20 +1013,22 @@ export default function HomeFeed() {
           borderBottom: '1px solid #EBEBEB',
         }}
       >
-        {/* Prize banner — always visible, super clear value prop */}
+        {/* Prize banner — PICK5 value loop */}
         <div
           className="rounded-2xl px-4 py-2.5 mb-3 flex items-center gap-3"
           style={{
-            background: 'linear-gradient(135deg, #FF3D9A 0%, #8B2BE2 100%)',
-            boxShadow: '0 4px 16px rgba(139,43,226,0.3)',
+            background: 'linear-gradient(135deg, #FF3D9A 0%, #8B2BE2 55%, #5B21B6 100%)',
+            boxShadow: '0 6px 20px rgba(139,43,226,0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
           }}
         >
-          <span className="text-2xl">🎁</span>
+          <span className="text-2xl shrink-0">🍬</span>
           <div className="flex-1 min-w-0">
             <p className="text-white font-bold text-sm leading-tight" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
-              Pick 5 correctly → Win prizes!
+              PICK5 → nail your 5 → bank credits!
             </p>
-            <p className="text-white/80 text-xs mt-0.5">Amazon, Home Depot, Starbucks gift cards &amp; more</p>
+            <p className="text-white/85 text-xs mt-0.5 leading-snug">
+              All 5 right = big payout · stack credits · redeem for Amazon, Starbucks &amp; more
+            </p>
           </div>
           {/* Credits badge — simple, no CR label */}
           <div
@@ -1028,35 +1047,29 @@ export default function HomeFeed() {
           </div>
         </div>
 
-        {/* Title row */}
-        <div className="flex items-center justify-between">
-          <div>
+        {/* PICK5 title + gem counter */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="min-w-0">
             <h1
-              className="text-2xl font-display"
+              className="text-[1.85rem] leading-none tracking-wide"
               style={{
-                fontFamily: "'Fredoka One', 'Nunito', sans-serif",
-                background: 'linear-gradient(135deg, #FF3D9A, #8B2BE2)',
+                fontFamily: "'Chewy', cursive",
+                background: 'linear-gradient(135deg, #FF3D9A 0%, #C0267E 40%, #8B2BE2 75%, #00B894 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-                letterSpacing: '0.02em',
               }}
             >
-              Swipestakes
+              PICK5
             </h1>
-            <p className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: 'Nunito, sans-serif' }}>
-              {isAuthenticated
-                ? allDone
-                  ? '🌅 Come back tomorrow for new picks'
-                  : `${picksLeft} pick${picksLeft !== 1 ? 's' : ''} left today`
-                : 'Swipe YES or NOPE on each pick'}
+            <p className="text-[11px] font-bold text-gray-500 mt-1" style={{ fontFamily: 'Nunito, sans-serif' }}>
+              by Swipestakes · your daily 5-pick match
             </p>
           </div>
 
-          {/* Streak badge only — no dots */}
           {isAuthenticated && currentStreak > 0 && (
             <div
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full font-bold text-sm"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs shrink-0"
               style={{
                 background: currentStreak >= 7
                   ? 'linear-gradient(135deg, #FF8C00, #FF3D9A)'
@@ -1069,18 +1082,71 @@ export default function HomeFeed() {
               }}
             >
               <span>{currentStreak >= 7 ? '🔥' : currentStreak >= 3 ? '⚡' : '✨'}</span>
-              <span>{currentStreak}d streak</span>
+              <span>{currentStreak}d</span>
             </div>
           )}
         </div>
+
+        <div className="mb-2">
+          <Pick5Progress filled={pick5GemsFilled} activeIndex={pick5ActiveGem} />
+          <p className="text-center text-[11px] font-bold text-gray-500 mt-1.5" style={{ fontFamily: 'Nunito, sans-serif' }}>
+            {pick5RoundDone
+              ? 'Round complete — nice! ✨'
+              : `Pick ${pick5ActiveGem ?? 1} of 5 — ${picksLeft} left today`}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setHowPick5Open((o) => !o)}
+          className="w-full flex items-center justify-between gap-2 rounded-2xl px-3 py-2.5 mb-1 transition-colors"
+          style={{
+            background: 'linear-gradient(180deg, #FFF7FB 0%, #F3E8FF 100%)',
+            border: '2px solid rgba(255,61,154,0.2)',
+            boxShadow: '0 3px 0 rgba(139,43,226,0.12)',
+          }}
+        >
+          <span className="text-xs font-black text-gray-700" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
+            How PICK5 works
+          </span>
+          <ChevronDown
+            size={18}
+            className="text-pink-500 shrink-0 transition-transform"
+            style={{ transform: howPick5Open ? 'rotate(180deg)' : undefined }}
+          />
+        </button>
+        {howPick5Open && (
+          <div
+            className="rounded-2xl px-3 py-3 mb-2 text-left space-y-2"
+            style={{
+              background: '#FFFBFC',
+              border: '1px solid rgba(255,61,154,0.15)',
+              fontFamily: 'Nunito, sans-serif',
+            }}
+          >
+            <p className="text-xs font-bold text-gray-800 leading-snug">
+              <span className="text-green-600">→</span> or <span className="text-green-600">YES!</span> = lock in yes / over ·{' '}
+              <span className="text-rose-500">←</span> or <span className="text-rose-500">NOPE</span> = no / under ·{' '}
+              <span className="text-gray-500">↓</span> skip (still uses 1 of your 5)
+            </p>
+            <p className="text-xs text-gray-600 leading-snug">
+              Finish all 5 picks for the day. When results settle: <span className="font-bold text-amber-600">5/5 → 25 credits</span>,{' '}
+              <span className="font-bold text-pink-600">4/5 → 10</span>, <span className="font-bold text-teal-600">3/5 → 5</span>. Spend credits in{' '}
+              <span className="font-bold">Wallet → Redeem</span> for gift cards.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ── CARD AREA ──
           min-height in normal flow so the page can extend past the viewport and
           scroll (absolute children do not add to parent height). */}
       <div
-        className="relative w-full min-h-[calc(100dvh-13rem)] shrink-0"
-        style={{ background: "#F5F5F7" }}
+        className="relative w-full min-h-[calc(100dvh-11rem)] shrink-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 120% 80% at 50% -20%, rgba(255,61,154,0.14) 0%, transparent 55%), radial-gradient(ellipse 90% 60% at 100% 100%, rgba(139,43,226,0.1) 0%, transparent 50%), radial-gradient(ellipse 70% 50% at 0% 80%, rgba(0,212,170,0.08) 0%, transparent 45%), linear-gradient(180deg, #FFF5FB 0%, #F0FAFF 35%, #F3F4F6 100%)",
+        }}
       >
         {allDone && !showOutOfPicks ? (
           // Daily complete — candy celebration screen
@@ -1099,10 +1165,10 @@ export default function HomeFeed() {
                 🏆
               </motion.div>
               <h2 className="text-3xl mb-2 font-display" style={{ fontFamily: "'Fredoka One', sans-serif", background: 'linear-gradient(135deg, #FFD700, #FF3D9A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                All done!
+                PICK5 done today!
               </h2>
               <p className="text-sm font-bold text-gray-500" style={{ fontFamily: 'Nunito, sans-serif' }}>
-                Results drop tonight 🌙 Come back tomorrow!
+                Fresh cards tomorrow — keep your streak going 🌙
               </p>
             </motion.div>
             <button

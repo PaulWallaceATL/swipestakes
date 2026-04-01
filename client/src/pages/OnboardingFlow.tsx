@@ -249,19 +249,19 @@ export default function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
           <h1
             className="text-4xl font-bold mb-3"
-            style={{ fontFamily: "'Fredoka One', sans-serif", letterSpacing: '0.01em' }}
+            style={{ fontFamily: "'Chewy', cursive", letterSpacing: '0.03em' }}
           >
             <span className="text-gray-800">Welcome to</span>
             <br />
             <span style={{ background: 'linear-gradient(135deg, #FF3D9A, #8B2BE2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              Swipestakes!
+              PICK5!
             </span>
           </h1>
           <p
             className="text-base mb-8 text-gray-500"
             style={{ fontFamily: 'Nunito, sans-serif', lineHeight: 1.6 }}
           >
-            5 free picks every day. Swipe to predict. Earn credits. Redeem for gift cards.
+            Your daily <span className="font-bold text-gray-700">PICK5</span> match on Swipestakes: five swipes, real credits when you’re right, gift cards when you redeem.
           </p>
 
           {/* How it works mini-cards */}

@@ -70,33 +70,48 @@ function createTone(ctx: AudioContext, freq: number, type: OscillatorType, durat
   osc.stop(ctx.currentTime + duration);
 }
 
+// Crowd SFX (Mixkit previews, trimmed) — played via HTMLAudioElement so they work alongside Web Audio skip tone
+let _crowdYes: HTMLAudioElement | null = null;
+let _crowdNo: HTMLAudioElement | null = null;
+
+function crowdAudio(kind: 'yes' | 'no'): HTMLAudioElement {
+  if (kind === 'yes') {
+    if (!_crowdYes) {
+      _crowdYes = new Audio('/sounds/crowd-yes.mp3');
+      _crowdYes.preload = 'auto';
+    }
+    return _crowdYes;
+  }
+  if (!_crowdNo) {
+    _crowdNo = new Audio('/sounds/crowd-no.mp3');
+    _crowdNo.preload = 'auto';
+  }
+  return _crowdNo;
+}
+
 function playSwipeSound(type: 'yes' | 'no' | 'skip') {
+  if (type === 'yes' || type === 'no') {
+    unlockAudio();
+    try {
+      const el = crowdAudio(type);
+      el.volume = 0.9;
+      el.currentTime = 0;
+      void el.play().catch(() => {});
+    } catch (_) {}
+    return;
+  }
   try {
     const ctx = getAudioCtx();
     if (!ctx) return;
-    // Resume context if suspended (iOS requires this after page visibility change)
     const play = () => {
-      if (type === 'yes') {
-        // Ascending two-tone "ding ding" — cheerful
-        createTone(ctx, 523, 'sine', 0.15, 0.3);
-        setTimeout(() => createTone(ctx, 784, 'sine', 0.2, 0.3), 120);
-      } else if (type === 'no') {
-        // Descending "thud" — low buzz
-        createTone(ctx, 220, 'sawtooth', 0.12, 0.18);
-        setTimeout(() => createTone(ctx, 180, 'sawtooth', 0.15, 0.18), 80);
-      } else {
-        // Neutral "whoosh" — mid sine fade
-        createTone(ctx, 350, 'sine', 0.18, 0.12);
-      }
+      createTone(ctx, 350, 'sine', 0.18, 0.12);
     };
     if (ctx.state === 'suspended') {
       ctx.resume().then(play).catch(() => {});
     } else {
       play();
     }
-  } catch (_) {
-    // Audio not supported — silently ignore
-  }
+  } catch (_) {}
 }
 
 // ─── CATEGORY CONFIG ──────────────────────────────────────────────────────────

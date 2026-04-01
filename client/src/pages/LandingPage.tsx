@@ -213,7 +213,7 @@ export default function LandingPage() {
           >
             Sign in
           </a>
-          <Link href="/feed">
+          <Link href="/feed?play=1">
             <a
               className="text-sm font-bold px-4 py-2 rounded-xl text-white"
               style={{ background: 'linear-gradient(135deg, #FF3D9A, #8B2BE2)', boxShadow: '0 4px 16px rgba(255,61,154,0.3)', fontFamily: 'Nunito, sans-serif' }}
@@ -268,7 +268,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
-            <Link href="/feed">
+            <Link href="/feed?play=1">
               <a
                 className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-black text-lg text-white"
                 style={{
@@ -571,7 +571,7 @@ export default function LandingPage() {
             Join thousands of players earning free gift cards every day. No deposit, no risk.
           </p>
 
-          <Link href="/feed">
+          <Link href="/feed?play=1">
             <a
               className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-black text-lg text-gray-800 bg-white"
               style={{

@@ -10,6 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { SparkleToken, SparkleStar } from "@/components/SparkleToken";
 import { Pick5Progress } from "@/components/Pick5Progress";
+import { FirstPlayGuide, FIRST_PLAY_GUIDE_STORAGE_KEY } from "@/components/FirstPlayGuide";
 
 // ─── SOUND ENGINE ─────────────────────────────────────────────────────────────
 // Singleton AudioContext — created once, reused for all sounds.
@@ -387,10 +388,10 @@ function AuthGateModal() {
             🎯
           </motion.div>
           <h2 className="text-3xl mb-1" style={{ fontFamily: "'Fredoka One', sans-serif", background: 'linear-gradient(135deg, #FFD700, #FF3D9A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            PICK5 complete!
+            Nice — all 5 picks in!
           </h2>
           <p className="text-sm leading-relaxed" style={{ fontFamily: 'Nunito, sans-serif', color: 'rgba(255,255,255,0.65)' }}>
-            You crushed a full PICK5 round! Sign up free to save your picks, earn credits when results hit, and redeem for gift cards.
+            Create a free account to save your picks, get results, earn credits, and redeem gift cards. Takes under a minute.
           </p>
         </div>
 
@@ -451,7 +452,7 @@ function AuthGateModal() {
             textDecoration: 'none',
           }}
         >
-          🚀 Sign up free — save your picks!
+          Create free account
         </a>
         <p className="text-center text-xs mt-3" style={{ fontFamily: 'Nunito, sans-serif', color: 'rgba(255,255,255,0.3)' }}>
           No credit card · Free forever
@@ -904,6 +905,24 @@ export default function HomeFeed() {
   }>>([]);
   const [parlaySubmitted, setParlaySubmitted] = useState(false);
   const [howPick5Open, setHowPick5Open] = useState(false);
+  const [firstPlayGuideOpen, setFirstPlayGuideOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isAuthenticated) return;
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("play") !== "1") return;
+    if (localStorage.getItem(FIRST_PLAY_GUIDE_STORAGE_KEY)) {
+      window.history.replaceState({}, document.title, "/feed");
+      return;
+    }
+    setFirstPlayGuideOpen(true);
+    window.history.replaceState({}, document.title, "/feed");
+  }, [isAuthenticated]);
+
+  const completeFirstPlayGuide = useCallback(() => {
+    localStorage.setItem(FIRST_PLAY_GUIDE_STORAGE_KEY, "1");
+    setFirstPlayGuideOpen(false);
+  }, []);
 
   const submitParlay = trpc.credits.submitParlay.useMutation({
     onSuccess: () => {
@@ -935,6 +954,7 @@ export default function HomeFeed() {
     pick5RoundDone || sessionCompleted >= 5 ? null : Math.min(5, sessionCompleted + 1);
 
   const handleSwipe = useCallback(async (choice: 'yes' | 'no' | 'over' | 'under' | 'skip', label: string, color: string) => {
+    if (firstPlayGuideOpen) return;
     const market = displayPicks[currentIndex];
     if (!market) return;
 
@@ -993,7 +1013,7 @@ export default function HomeFeed() {
         } catch (_) { /* parlay still shows complete screen */ }
       }
     }
-  }, [currentIndex, displayPicks, isAuthenticated, showAuthGate, stagedPicks, submitParlay]);
+  }, [currentIndex, displayPicks, isAuthenticated, showAuthGate, stagedPicks, submitParlay, firstPlayGuideOpen]);
 
   const handleRefresh = useCallback(() => {
     setAllDone(false);
@@ -1003,146 +1023,183 @@ export default function HomeFeed() {
     refetchStatus();
   }, [refetchMarkets, refetchStatus]);
 
+  const cardAreaMinClass = isAuthenticated ? "min-h-[calc(100dvh-13rem)]" : "min-h-[calc(100dvh-9.5rem)]";
+
   return (
     <div className="relative flex flex-col" style={{ background: "#FFFFFF" }}>
-      {/* ── CANDY HEADER ── */}
-      <div
-        className="flex-shrink-0 px-4 pt-4 pb-3"
-        style={{
-          background: '#FFFFFF',
-          borderBottom: '1px solid #EBEBEB',
-        }}
-      >
-        {/* Prize banner — PICK5 value loop */}
+      <FirstPlayGuide open={firstPlayGuideOpen} onComplete={completeFirstPlayGuide} />
+
+      {isAuthenticated ? (
         <div
-          className="rounded-2xl px-4 py-2.5 mb-3 flex items-center gap-3"
+          className="flex-shrink-0 px-4 pt-4 pb-3"
           style={{
-            background: 'linear-gradient(135deg, #FF3D9A 0%, #8B2BE2 55%, #5B21B6 100%)',
-            boxShadow: '0 6px 20px rgba(139,43,226,0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
+            background: "#FFFFFF",
+            borderBottom: "1px solid #EBEBEB",
           }}
         >
-          <span className="text-2xl shrink-0">🍬</span>
-          <div className="flex-1 min-w-0">
-            <p className="text-white font-bold text-sm leading-tight" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
-              PICK5 → nail your 5 → bank credits!
-            </p>
-            <p className="text-white/85 text-xs mt-0.5 leading-snug">
-              All 5 right = big payout · stack credits · redeem for Amazon, Starbucks &amp; more
-            </p>
-          </div>
-          {/* Credits badge — simple, no CR label */}
           <div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold"
+            className="rounded-2xl px-4 py-2.5 mb-3 flex items-center gap-3"
             style={{
-              background: 'rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(8px)',
-              fontFamily: "'Fredoka One', sans-serif",
-              color: '#FFD700',
-              fontSize: 15,
-              whiteSpace: 'nowrap',
+              background: "linear-gradient(135deg, #FF3D9A 0%, #8B2BE2 55%, #5B21B6 100%)",
+              boxShadow: "0 6px 20px rgba(139,43,226,0.35), inset 0 1px 0 rgba(255,255,255,0.2)",
             }}
           >
-            <span>🪙</span>
-            <span>{balance}</span>
+            <span className="text-2xl shrink-0">🍬</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-bold text-sm leading-tight" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
+                PICK5 — win credits, redeem gift cards
+              </p>
+              <p className="text-white/85 text-xs mt-0.5 leading-snug">
+                More correct picks → more credits → Wallet → Redeem
+              </p>
+            </div>
+            <div
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold"
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                backdropFilter: "blur(8px)",
+                fontFamily: "'Fredoka One', sans-serif",
+                color: "#FFD700",
+                fontSize: 15,
+                whiteSpace: "nowrap",
+              }}
+            >
+              <span>🪙</span>
+              <span>{balance}</span>
+            </div>
           </div>
-        </div>
 
-        {/* PICK5 title + gem counter */}
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="min-w-0">
+              <h1
+                className="text-[1.85rem] leading-none tracking-wide"
+                style={{
+                  fontFamily: "'Chewy', cursive",
+                  background: "linear-gradient(135deg, #FF3D9A 0%, #C0267E 40%, #8B2BE2 75%, #00B894 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                PICK5
+              </h1>
+              <p className="text-[11px] font-bold text-gray-500 mt-1" style={{ fontFamily: "Nunito, sans-serif" }}>
+                by Swipestakes · your daily 5-pick match
+              </p>
+            </div>
+
+            {currentStreak > 0 && (
+              <div
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs shrink-0"
+                style={{
+                  background:
+                    currentStreak >= 7
+                      ? "linear-gradient(135deg, #FF8C00, #FF3D9A)"
+                      : currentStreak >= 3
+                        ? "linear-gradient(135deg, #FFD700, #FF8C00)"
+                        : "linear-gradient(135deg, #8B2BE2, #FF3D9A)",
+                  color: "#fff",
+                  boxShadow: "0 2px 10px rgba(255,61,154,0.3)",
+                  fontFamily: "'Fredoka One', sans-serif",
+                }}
+              >
+                <span>{currentStreak >= 7 ? "🔥" : currentStreak >= 3 ? "⚡" : "✨"}</span>
+                <span>{currentStreak}d</span>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-2">
+            <Pick5Progress filled={pick5GemsFilled} activeIndex={pick5ActiveGem} />
+            <p className="text-center text-[11px] font-bold text-gray-500 mt-1.5" style={{ fontFamily: "Nunito, sans-serif" }}>
+              {pick5RoundDone
+                ? "Round complete — nice! ✨"
+                : `Pick ${pick5ActiveGem ?? 1} of 5 — ${picksLeft} left today`}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setHowPick5Open((o) => !o)}
+            className="w-full flex items-center justify-between gap-2 rounded-2xl px-3 py-2.5 mb-1 transition-colors"
+            style={{
+              background: "linear-gradient(180deg, #FFF7FB 0%, #F3E8FF 100%)",
+              border: "2px solid rgba(255,61,154,0.2)",
+              boxShadow: "0 3px 0 rgba(139,43,226,0.12)",
+            }}
+          >
+            <span className="text-xs font-black text-gray-700" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
+              How PICK5 works
+            </span>
+            <ChevronDown
+              size={18}
+              className="text-pink-500 shrink-0 transition-transform"
+              style={{ transform: howPick5Open ? "rotate(180deg)" : undefined }}
+            />
+          </button>
+          {howPick5Open && (
+            <div
+              className="rounded-2xl px-3 py-3 mb-2 text-left space-y-2"
+              style={{
+                background: "#FFFBFC",
+                border: "1px solid rgba(255,61,154,0.15)",
+                fontFamily: "Nunito, sans-serif",
+              }}
+            >
+              <p className="text-xs font-bold text-gray-800 leading-snug">
+                <span className="text-green-600">→</span> or <span className="text-green-600">YES!</span> = yes / over ·{" "}
+                <span className="text-rose-500">←</span> or <span className="text-rose-500">NOPE</span> = no / under ·{" "}
+                <span className="text-gray-500">↓</span> skip (still 1 of 5)
+              </p>
+              <p className="text-xs text-gray-600 leading-snug">
+                <span className="font-bold text-amber-600">5/5 → 25</span>, <span className="font-bold text-pink-600">4/5 → 10</span>,{" "}
+                <span className="font-bold text-teal-600">3/5 → 5</span> credits. Redeem in <span className="font-bold">Wallet</span>.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex-shrink-0 px-4 pt-3 pb-3 bg-white border-b border-[#EBEBEB]">
+          <div className="flex items-center justify-between gap-2 mb-2">
             <h1
-              className="text-[1.85rem] leading-none tracking-wide"
+              className="text-[1.75rem] leading-none tracking-wide"
               style={{
                 fontFamily: "'Chewy', cursive",
-                background: 'linear-gradient(135deg, #FF3D9A 0%, #C0267E 40%, #8B2BE2 75%, #00B894 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                background: "linear-gradient(135deg, #FF3D9A 0%, #8B2BE2 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
               }}
             >
               PICK5
             </h1>
-            <p className="text-[11px] font-bold text-gray-500 mt-1" style={{ fontFamily: 'Nunito, sans-serif' }}>
-              by Swipestakes · your daily 5-pick match
-            </p>
-          </div>
-
-          {isAuthenticated && currentStreak > 0 && (
-            <div
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs shrink-0"
+            <span
+              className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
               style={{
-                background: currentStreak >= 7
-                  ? 'linear-gradient(135deg, #FF8C00, #FF3D9A)'
-                  : currentStreak >= 3
-                    ? 'linear-gradient(135deg, #FFD700, #FF8C00)'
-                    : 'linear-gradient(135deg, #8B2BE2, #FF3D9A)',
-                color: '#fff',
-                boxShadow: '0 2px 10px rgba(255,61,154,0.3)',
-                fontFamily: "'Fredoka One', sans-serif",
+                fontFamily: "Nunito, sans-serif",
+                background: "rgba(255,61,154,0.1)",
+                color: "#FF3D9A",
+                border: "1px solid rgba(255,61,154,0.2)",
               }}
             >
-              <span>{currentStreak >= 7 ? '🔥' : currentStreak >= 3 ? '⚡' : '✨'}</span>
-              <span>{currentStreak}d</span>
-            </div>
-          )}
-        </div>
-
-        <div className="mb-2">
+              5 free picks
+            </span>
+          </div>
           <Pick5Progress filled={pick5GemsFilled} activeIndex={pick5ActiveGem} />
-          <p className="text-center text-[11px] font-bold text-gray-500 mt-1.5" style={{ fontFamily: 'Nunito, sans-serif' }}>
-            {pick5RoundDone
-              ? 'Round complete — nice! ✨'
-              : `Pick ${pick5ActiveGem ?? 1} of 5 — ${picksLeft} left today`}
+          <p className="text-center text-[11px] font-bold text-gray-600 mt-1.5" style={{ fontFamily: "Nunito, sans-serif" }}>
+            {pick5RoundDone ? "All 5 done — unlock your account next ✨" : `Pick ${pick5ActiveGem ?? 1} of 5`}
+          </p>
+          <p className="text-center text-[10px] text-gray-400 mt-1" style={{ fontFamily: "Nunito, sans-serif" }}>
+            Swipe the card or use the buttons underneath
           </p>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setHowPick5Open((o) => !o)}
-          className="w-full flex items-center justify-between gap-2 rounded-2xl px-3 py-2.5 mb-1 transition-colors"
-          style={{
-            background: 'linear-gradient(180deg, #FFF7FB 0%, #F3E8FF 100%)',
-            border: '2px solid rgba(255,61,154,0.2)',
-            boxShadow: '0 3px 0 rgba(139,43,226,0.12)',
-          }}
-        >
-          <span className="text-xs font-black text-gray-700" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
-            How PICK5 works
-          </span>
-          <ChevronDown
-            size={18}
-            className="text-pink-500 shrink-0 transition-transform"
-            style={{ transform: howPick5Open ? 'rotate(180deg)' : undefined }}
-          />
-        </button>
-        {howPick5Open && (
-          <div
-            className="rounded-2xl px-3 py-3 mb-2 text-left space-y-2"
-            style={{
-              background: '#FFFBFC',
-              border: '1px solid rgba(255,61,154,0.15)',
-              fontFamily: 'Nunito, sans-serif',
-            }}
-          >
-            <p className="text-xs font-bold text-gray-800 leading-snug">
-              <span className="text-green-600">→</span> or <span className="text-green-600">YES!</span> = lock in yes / over ·{' '}
-              <span className="text-rose-500">←</span> or <span className="text-rose-500">NOPE</span> = no / under ·{' '}
-              <span className="text-gray-500">↓</span> skip (still uses 1 of your 5)
-            </p>
-            <p className="text-xs text-gray-600 leading-snug">
-              Finish all 5 picks for the day. When results settle: <span className="font-bold text-amber-600">5/5 → 25 credits</span>,{' '}
-              <span className="font-bold text-pink-600">4/5 → 10</span>, <span className="font-bold text-teal-600">3/5 → 5</span>. Spend credits in{' '}
-              <span className="font-bold">Wallet → Redeem</span> for gift cards.
-            </p>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* ── CARD AREA ──
           min-height in normal flow so the page can extend past the viewport and
           scroll (absolute children do not add to parent height). */}
       <div
-        className="relative w-full min-h-[calc(100dvh-11rem)] shrink-0"
+        className={`relative w-full ${cardAreaMinClass} shrink-0`}
         style={{
           background:
             "radial-gradient(ellipse 120% 80% at 50% -20%, rgba(255,61,154,0.14) 0%, transparent 55%), radial-gradient(ellipse 90% 60% at 100% 100%, rgba(139,43,226,0.1) 0%, transparent 50%), radial-gradient(ellipse 70% 50% at 0% 80%, rgba(0,212,170,0.08) 0%, transparent 45%), linear-gradient(180deg, #FFF5FB 0%, #F0FAFF 35%, #F3F4F6 100%)",

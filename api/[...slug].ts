@@ -1,8 +1,5 @@
 /**
  * Catch-all under /api so /api/trpc/* (and /api/stripe/webhook, etc.) hit Express.
- * `api/index.ts` only matched the exact path /api on Vercel, which broke tRPC.
+ * Shared bundle built in `pnpm build` → api/_app.js (see api/vercel-entry.ts).
  */
-import { createApiApp } from "../server/_core/apiApp";
-
-const app = createApiApp();
-export default app;
+export { default } from "./_app.js";

@@ -74,6 +74,7 @@ export const users = pgTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
+  emailConfirmed: boolean("emailConfirmed").default(false).notNull(),
   role: userRoleEnum("role").default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),

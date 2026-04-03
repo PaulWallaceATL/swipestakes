@@ -67,6 +67,11 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.role = 'admin';
     }
 
+    if (user.emailConfirmed !== undefined) {
+      values.emailConfirmed = user.emailConfirmed;
+      updateSet.emailConfirmed = user.emailConfirmed;
+    }
+
     if (!values.lastSignedIn) {
       values.lastSignedIn = new Date();
     }

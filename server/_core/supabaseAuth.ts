@@ -22,6 +22,11 @@ function bearerToken(req: Request): string | null {
   return t.length > 0 ? t : null;
 }
 
+function loginMethodFromUser(user: { app_metadata?: Record<string, unknown> }): string {
+  const p = user.app_metadata?.provider;
+  return typeof p === "string" && p.length > 0 ? p : "email";
+}
+
 function displayNameFromUser(user: {
   user_metadata?: Record<string, unknown>;
   email?: string | null;
@@ -60,11 +65,13 @@ export async function authenticateRequest(req: Request): Promise<User | null> {
   }
 
   const signedInAt = new Date();
+  const emailConfirmed = Boolean(user.email_confirmed_at);
   await db.upsertUser({
     openId: user.id,
     email: user.email ?? null,
     name: displayNameFromUser(user),
-    loginMethod: "email",
+    loginMethod: loginMethodFromUser(user),
+    emailConfirmed,
     lastSignedIn: signedInAt,
   });
 

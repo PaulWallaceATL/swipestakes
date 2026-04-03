@@ -1,0 +1,2425 @@
+{
+  "id": "88e33c61-25a0-4e5e-832f-7ed3e327b386",
+  "prevId": "bac299b2-21ce-44b0-8323-cc501abe352e",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.app_notifications": {
+      "name": "app_notifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "notification_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'system'"
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "read": {
+          "name": "read",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "marketId": {
+          "name": "marketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "positionId": {
+          "name": "positionId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.clips": {
+      "name": "clips",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "externalId": {
+          "name": "externalId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "clip_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'youtube'"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "videoUrl": {
+          "name": "videoUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "thumbnailUrl": {
+          "name": "thumbnailUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "channelName": {
+          "name": "channelName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sport": {
+          "name": "sport",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duration": {
+          "name": "duration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "viewCount": {
+          "name": "viewCount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "likeCount": {
+          "name": "likeCount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "linkedMarketId": {
+          "name": "linkedMarketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tags": {
+          "name": "tags",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::json"
+        },
+        "publishedAt": {
+          "name": "publishedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fetchedAt": {
+          "name": "fetchedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "clips_externalId_unique": {
+          "name": "clips_externalId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "externalId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.credit_transactions": {
+      "name": "credit_transactions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balanceBefore": {
+          "name": "balanceBefore",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balanceAfter": {
+          "name": "balanceAfter",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "credit_tx_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referenceId": {
+          "name": "referenceId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.credits": {
+      "name": "credits",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balance": {
+          "name": "balance",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 10
+        },
+        "lifetimeEarned": {
+          "name": "lifetimeEarned",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "lifetimeRedeemed": {
+          "name": "lifetimeRedeemed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "credits_userId_unique": {
+          "name": "credits_userId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "userId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.daily_picks": {
+      "name": "daily_picks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marketId": {
+          "name": "marketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pickDate": {
+          "name": "pickDate",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pickOrder": {
+          "name": "pickOrder",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "choice": {
+          "name": "choice",
+          "type": "pick_choice",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "questionSnapshot": {
+          "name": "questionSnapshot",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "marketType": {
+          "name": "marketType",
+          "type": "pick_market_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'binary'"
+        },
+        "result": {
+          "name": "result",
+          "type": "pick_result",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "creditsAwarded": {
+          "name": "creditsAwarded",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.daily_results": {
+      "name": "daily_results",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pickDate": {
+          "name": "pickDate",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalPicks": {
+          "name": "totalPicks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "correctPicks": {
+          "name": "correctPicks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "skippedPicks": {
+          "name": "skippedPicks",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "creditsEarned": {
+          "name": "creditsEarned",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "scoreTier": {
+          "name": "scoreTier",
+          "type": "score_tier",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'miss'"
+        },
+        "settledAt": {
+          "name": "settledAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.events": {
+      "name": "events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "externalId": {
+          "name": "externalId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "event_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'swipestakes'"
+        },
+        "category": {
+          "name": "category",
+          "type": "event_category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "leagueOrTopic": {
+          "name": "leagueOrTopic",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "startTime": {
+          "name": "startTime",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endTime": {
+          "name": "endTime",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "event_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'scheduled'"
+        },
+        "sourceRefs": {
+          "name": "sourceRefs",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::json"
+        },
+        "tags": {
+          "name": "tags",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::json"
+        },
+        "imageUrl": {
+          "name": "imageUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "events_externalId_unique": {
+          "name": "events_externalId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "externalId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.loyalty_milestones": {
+      "name": "loyalty_milestones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "milestoneId": {
+          "name": "milestoneId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pointsAwarded": {
+          "name": "pointsAwarded",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "creditsAwarded": {
+          "name": "creditsAwarded",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "earnedAt": {
+          "name": "earnedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.loyalty_stats": {
+      "name": "loyalty_stats",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currentStreak": {
+          "name": "currentStreak",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "longestStreak": {
+          "name": "longestStreak",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "lastPlayedDate": {
+          "name": "lastPlayedDate",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totalPicksPlaced": {
+          "name": "totalPicksPlaced",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "totalDaysPlayed": {
+          "name": "totalDaysPlayed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "loyaltyPoints": {
+          "name": "loyaltyPoints",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "lifetimeLoyaltyPoints": {
+          "name": "lifetimeLoyaltyPoints",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "tier": {
+          "name": "tier",
+          "type": "loyalty_tier",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'bronze'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "loyalty_stats_userId_unique": {
+          "name": "loyalty_stats_userId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "userId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.market_price_snapshots": {
+      "name": "market_price_snapshots",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "marketId": {
+          "name": "marketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outcomeId": {
+          "name": "outcomeId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bestBid": {
+          "name": "bestBid",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bestAsk": {
+          "name": "bestAsk",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "midpoint": {
+          "name": "midpoint",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lastTradePrice": {
+          "name": "lastTradePrice",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "volume": {
+          "name": "volume",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.00'"
+        },
+        "openInterest": {
+          "name": "openInterest",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.00'"
+        },
+        "capturedAt": {
+          "name": "capturedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.markets": {
+      "name": "markets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "eventId": {
+          "name": "eventId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "externalId": {
+          "name": "externalId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "event_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'swipestakes'"
+        },
+        "sourceUrl": {
+          "name": "sourceUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "question": {
+          "name": "question",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marketType": {
+          "name": "marketType",
+          "type": "market_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'binary'"
+        },
+        "rulesText": {
+          "name": "rulesText",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resolutionSourceType": {
+          "name": "resolutionSourceType",
+          "type": "resolution_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual_admin'"
+        },
+        "resolutionDeadline": {
+          "name": "resolutionDeadline",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tradingOpenAt": {
+          "name": "tradingOpenAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tradingCloseAt": {
+          "name": "tradingCloseAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "settlementType": {
+          "name": "settlementType",
+          "type": "settlement_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'cash'"
+        },
+        "state": {
+          "name": "state",
+          "type": "market_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "yesPrice": {
+          "name": "yesPrice",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.5000'"
+        },
+        "noPrice": {
+          "name": "noPrice",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.5000'"
+        },
+        "volume24h": {
+          "name": "volume24h",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.00'"
+        },
+        "openInterest": {
+          "name": "openInterest",
+          "type": "numeric(14, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.00'"
+        },
+        "spreadLine": {
+          "name": "spreadLine",
+          "type": "numeric(6, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totalLine": {
+          "name": "totalLine",
+          "type": "numeric(6, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "homeOdds": {
+          "name": "homeOdds",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "awayOdds": {
+          "name": "awayOdds",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "overOdds": {
+          "name": "overOdds",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "underOdds": {
+          "name": "underOdds",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aiConfidence": {
+          "name": "aiConfidence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 60
+        },
+        "aiReasoning": {
+          "name": "aiReasoning",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rawData": {
+          "name": "rawData",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fetchedAt": {
+          "name": "fetchedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "markets_externalId_unique": {
+          "name": "markets_externalId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "externalId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.orders": {
+      "name": "orders",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marketId": {
+          "name": "marketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outcomeId": {
+          "name": "outcomeId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "side": {
+          "name": "side",
+          "type": "order_side",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "filledQuantity": {
+          "name": "filledQuantity",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0.0000'"
+        },
+        "orderType": {
+          "name": "orderType",
+          "type": "order_type_enum",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'market'"
+        },
+        "status": {
+          "name": "status",
+          "type": "order_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "signedPayload": {
+          "name": "signedPayload",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.outcomes": {
+      "name": "outcomes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "marketId": {
+          "name": "marketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sortOrder": {
+          "name": "sortOrder",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "currentPrice": {
+          "name": "currentPrice",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.5000'"
+        },
+        "impliedProbability": {
+          "name": "impliedProbability",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.5000'"
+        },
+        "isWinner": {
+          "name": "isWinner",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "settlementValue": {
+          "name": "settlementValue",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.positions": {
+      "name": "positions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marketId": {
+          "name": "marketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outcomeId": {
+          "name": "outcomeId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "avgCost": {
+          "name": "avgCost",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalStaked": {
+          "name": "totalStaked",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "potentialPayout": {
+          "name": "potentialPayout",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "realizedPnl": {
+          "name": "realizedPnl",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.00'"
+        },
+        "unrealizedPnl": {
+          "name": "unrealizedPnl",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.00'"
+        },
+        "redeemedAmount": {
+          "name": "redeemedAmount",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.00'"
+        },
+        "status": {
+          "name": "status",
+          "type": "position_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "marketQuestion": {
+          "name": "marketQuestion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outcomeLabel": {
+          "name": "outcomeLabel",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "eventTitle": {
+          "name": "eventTitle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "eventCategory": {
+          "name": "eventCategory",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "oddsAtPlacement": {
+          "name": "oddsAtPlacement",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "placedAt": {
+          "name": "placedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "settledAt": {
+          "name": "settledAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.redeem_requests": {
+      "name": "redeem_requests",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "giftCardType": {
+          "name": "giftCardType",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "giftCardLabel": {
+          "name": "giftCardLabel",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creditCost": {
+          "name": "creditCost",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "redeem_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "deliveryEmail": {
+          "name": "deliveryEmail",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fulfilledAt": {
+          "name": "fulfilledAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.resolution_disputes": {
+      "name": "resolution_disputes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "proposalId": {
+          "name": "proposalId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "challengedBy": {
+          "name": "challengedBy",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidenceBlob": {
+          "name": "evidenceBlob",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "resolution_dispute_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resolvedAt": {
+          "name": "resolvedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.resolution_proposals": {
+      "name": "resolution_proposals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "marketId": {
+          "name": "marketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "proposedOutcomeId": {
+          "name": "proposedOutcomeId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "proposedBy": {
+          "name": "proposedBy",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "proposedAt": {
+          "name": "proposedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "evidenceBlob": {
+          "name": "evidenceBlob",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sourceSnapshot": {
+          "name": "sourceSnapshot",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "challengeWindowEndsAt": {
+          "name": "challengeWindowEndsAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "resolution_proposal_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "resolvedAt": {
+          "name": "resolvedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.saved_markets": {
+      "name": "saved_markets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marketId": {
+          "name": "marketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "savedAt": {
+          "name": "savedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.trades": {
+      "name": "trades",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "marketId": {
+          "name": "marketId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "outcomeId": {
+          "name": "outcomeId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "buyOrderId": {
+          "name": "buyOrderId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sellOrderId": {
+          "name": "sellOrderId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric(6, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totalCost": {
+          "name": "totalCost",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feeAmount": {
+          "name": "feeAmount",
+          "type": "numeric(8, 4)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'0.0000'"
+        },
+        "feeCurrency": {
+          "name": "feeCurrency",
+          "type": "varchar(8)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'USD'"
+        },
+        "executedAt": {
+          "name": "executedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_settings": {
+      "name": "user_settings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "displayName": {
+          "name": "displayName",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatarUrl": {
+          "name": "avatarUrl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notificationsEnabled": {
+          "name": "notificationsEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "emailNotifications": {
+          "name": "emailNotifications",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "defaultBetAmount": {
+          "name": "defaultBetAmount",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'10.00'"
+        },
+        "preferredCategories": {
+          "name": "preferredCategories",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::json"
+        },
+        "interests": {
+          "name": "interests",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::json"
+        },
+        "shoppingPreferences": {
+          "name": "shoppingPreferences",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::json"
+        },
+        "pickStyle": {
+          "name": "pickStyle",
+          "type": "pick_style",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'balanced'"
+        },
+        "riskStyle": {
+          "name": "riskStyle",
+          "type": "risk_style",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'moderate'"
+        },
+        "notificationPrefs": {
+          "name": "notificationPrefs",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::json"
+        },
+        "theme": {
+          "name": "theme",
+          "type": "theme",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'dark'"
+        },
+        "onboardingCompletedAt": {
+          "name": "onboardingCompletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_settings_userId_unique": {
+          "name": "user_settings_userId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "userId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "openId": {
+          "name": "openId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "loginMethod": {
+          "name": "loginMethod",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "emailConfirmed": {
+          "name": "emailConfirmed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "role": {
+          "name": "role",
+          "type": "user_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'user'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lastSignedIn": {
+          "name": "lastSignedIn",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_openId_unique": {
+          "name": "users_openId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "openId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.wallet_transactions": {
+      "name": "wallet_transactions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "walletId": {
+          "name": "walletId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "wallet_tx_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balanceBefore": {
+          "name": "balanceBefore",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "balanceAfter": {
+          "name": "balanceAfter",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "wallet_tx_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'completed'"
+        },
+        "referenceId": {
+          "name": "referenceId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "referenceType": {
+          "name": "referenceType",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripePaymentIntentId": {
+          "name": "stripePaymentIntentId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.wallets": {
+      "name": "wallets",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cashBalance": {
+          "name": "cashBalance",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1000.00'"
+        },
+        "promoCredits": {
+          "name": "promoCredits",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0.00'"
+        },
+        "withdrawableBalance": {
+          "name": "withdrawableBalance",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1000.00'"
+        },
+        "lockedBalance": {
+          "name": "lockedBalance",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0.00'"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(8)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'USD'"
+        },
+        "stripeCustomerId": {
+          "name": "stripeCustomerId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "wallets_userId_unique": {
+          "name": "wallets_userId_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "userId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.clip_source": {
+      "name": "clip_source",
+      "schema": "public",
+      "values": [
+        "youtube",
+        "espn",
+        "manual"
+      ]
+    },
+    "public.credit_tx_type": {
+      "name": "credit_tx_type",
+      "schema": "public",
+      "values": [
+        "daily_reward",
+        "signup_bonus",
+        "redeem",
+        "admin_grant",
+        "referral"
+      ]
+    },
+    "public.event_category": {
+      "name": "event_category",
+      "schema": "public",
+      "values": [
+        "sports",
+        "politics",
+        "geopolitical",
+        "finance",
+        "tech",
+        "culture",
+        "entertainment",
+        "science",
+        "daily"
+      ]
+    },
+    "public.event_source": {
+      "name": "event_source",
+      "schema": "public",
+      "values": [
+        "kalshi",
+        "polymarket",
+        "swipestakes",
+        "manual"
+      ]
+    },
+    "public.event_status": {
+      "name": "event_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "scheduled",
+        "live",
+        "closed",
+        "resolved",
+        "voided"
+      ]
+    },
+    "public.loyalty_tier": {
+      "name": "loyalty_tier",
+      "schema": "public",
+      "values": [
+        "bronze",
+        "silver",
+        "gold",
+        "platinum"
+      ]
+    },
+    "public.market_state": {
+      "name": "market_state",
+      "schema": "public",
+      "values": [
+        "open",
+        "suspended",
+        "closed",
+        "awaiting_resolution",
+        "resolved",
+        "disputed",
+        "voided"
+      ]
+    },
+    "public.market_type": {
+      "name": "market_type",
+      "schema": "public",
+      "values": [
+        "binary",
+        "multi_outcome",
+        "spread",
+        "total",
+        "player_prop"
+      ]
+    },
+    "public.notification_type": {
+      "name": "notification_type",
+      "schema": "public",
+      "values": [
+        "market_move",
+        "bet_settled",
+        "market_open",
+        "system"
+      ]
+    },
+    "public.order_side": {
+      "name": "order_side",
+      "schema": "public",
+      "values": [
+        "buy",
+        "sell"
+      ]
+    },
+    "public.order_status": {
+      "name": "order_status",
+      "schema": "public",
+      "values": [
+        "open",
+        "partial",
+        "filled",
+        "cancelled",
+        "expired"
+      ]
+    },
+    "public.order_type_enum": {
+      "name": "order_type_enum",
+      "schema": "public",
+      "values": [
+        "limit",
+        "market"
+      ]
+    },
+    "public.pick_choice": {
+      "name": "pick_choice",
+      "schema": "public",
+      "values": [
+        "yes",
+        "no",
+        "over",
+        "under",
+        "skip"
+      ]
+    },
+    "public.pick_market_type": {
+      "name": "pick_market_type",
+      "schema": "public",
+      "values": [
+        "binary",
+        "total",
+        "player_prop"
+      ]
+    },
+    "public.pick_result": {
+      "name": "pick_result",
+      "schema": "public",
+      "values": [
+        "correct",
+        "incorrect",
+        "skipped",
+        "pending"
+      ]
+    },
+    "public.pick_style": {
+      "name": "pick_style",
+      "schema": "public",
+      "values": [
+        "high_confidence",
+        "balanced",
+        "contrarian"
+      ]
+    },
+    "public.position_status": {
+      "name": "position_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "won",
+        "lost",
+        "cashed_out",
+        "voided"
+      ]
+    },
+    "public.redeem_status": {
+      "name": "redeem_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "processing",
+        "fulfilled",
+        "failed"
+      ]
+    },
+    "public.resolution_dispute_status": {
+      "name": "resolution_dispute_status",
+      "schema": "public",
+      "values": [
+        "open",
+        "upheld",
+        "dismissed"
+      ]
+    },
+    "public.resolution_proposal_status": {
+      "name": "resolution_proposal_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "challenged",
+        "accepted",
+        "rejected"
+      ]
+    },
+    "public.resolution_source": {
+      "name": "resolution_source",
+      "schema": "public",
+      "values": [
+        "official_box_score",
+        "manual_admin",
+        "oracle",
+        "third_party_feed",
+        "kalshi",
+        "polymarket"
+      ]
+    },
+    "public.risk_style": {
+      "name": "risk_style",
+      "schema": "public",
+      "values": [
+        "safe",
+        "moderate",
+        "aggressive"
+      ]
+    },
+    "public.score_tier": {
+      "name": "score_tier",
+      "schema": "public",
+      "values": [
+        "perfect",
+        "great",
+        "good",
+        "miss"
+      ]
+    },
+    "public.settlement_type": {
+      "name": "settlement_type",
+      "schema": "public",
+      "values": [
+        "cash",
+        "credits"
+      ]
+    },
+    "public.theme": {
+      "name": "theme",
+      "schema": "public",
+      "values": [
+        "dark",
+        "light",
+        "system"
+      ]
+    },
+    "public.user_role": {
+      "name": "user_role",
+      "schema": "public",
+      "values": [
+        "user",
+        "admin"
+      ]
+    },
+    "public.wallet_tx_status": {
+      "name": "wallet_tx_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "completed",
+        "failed",
+        "reversed"
+      ]
+    },
+    "public.wallet_tx_type": {
+      "name": "wallet_tx_type",
+      "schema": "public",
+      "values": [
+        "deposit",
+        "withdrawal",
+        "bet_buy",
+        "bet_sell",
+        "payout",
+        "refund",
+        "promo",
+        "fee"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

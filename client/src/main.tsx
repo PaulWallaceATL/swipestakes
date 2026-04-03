@@ -84,10 +84,16 @@ const trpcClient = trpc.createClient({
 
 injectUmamiIfConfigured();
 
-createRoot(document.getElementById("root")!).render(
-  <trpc.Provider client={trpcClient} queryClient={queryClient}>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </trpc.Provider>
-);
+/** Parse #access_token from email confirmation links before first render. */
+async function bootstrap() {
+  await supabase.auth.getSession();
+  createRoot(document.getElementById("root")!).render(
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </trpc.Provider>,
+  );
+}
+
+void bootstrap();

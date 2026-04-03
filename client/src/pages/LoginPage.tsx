@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useLocation, useSearch } from "wouter";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { getSiteOrigin } from "@/lib/siteUrl";
 
 function safeReturn(search: string): string {
   const raw = new URLSearchParams(search).get("return") ?? "/feed";
@@ -18,8 +19,25 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  /** Email confirmation required — user must click link before signing in */
+  const [awaitingEmailConfirm, setAwaitingEmailConfirm] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Already signed in (e.g. after email link) — leave login and strip auth hash from URL
+  useEffect(() => {
+    let cancelled = false;
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled || !session) return;
+      const path = `${window.location.pathname}${window.location.search}`;
+      window.history.replaceState(null, "", path);
+      navigate(returnPath);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, returnPath]);
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const trimmed = email.trim();
     if (!trimmed || password.length < 6) {
@@ -30,30 +48,112 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const origin = getSiteOrigin();
+        if (!origin) {
+          toast.error("Missing site URL. Set VITE_SITE_URL for production auth emails.");
+          return;
+        }
+        const redirect = new URL("/login", origin);
+        redirect.searchParams.set("return", returnPath);
+        const { data, error } = await supabase.auth.signUp({
           email: trimmed,
           password,
+          options: {
+            emailRedirectTo: redirect.toString(),
+          },
         });
         if (error) {
           toast.error(error.message);
           return;
         }
-        toast.success("Account ready — you're signed in.");
+        if (data.session) {
+          setAwaitingEmailConfirm(false);
+          toast.success("Account created — you're signed in.");
+          navigate(returnPath);
+          return;
+        }
+        setSentToEmail(trimmed);
+        setAwaitingEmailConfirm(true);
+        toast.success("Check your email to confirm your account.");
+        setMode("signin");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: trimmed,
           password,
         });
         if (error) {
-          toast.error(error.message);
+          if (error.message.toLowerCase().includes("email not confirmed")) {
+            toast.error("Confirm your email first — we sent you a link.");
+          } else {
+            toast.error(error.message);
+          }
           return;
         }
+        toast.success("Signed in.");
+        navigate(returnPath);
       }
-      navigate(returnPath);
     } finally {
       setLoading(false);
     }
   };
+
+  if (awaitingEmailConfirm) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
+        style={{ background: "#F8F7FF", fontFamily: "Nunito, sans-serif" }}
+      >
+        <div
+          className="w-full max-w-md rounded-3xl p-8 shadow-xl bg-white text-center"
+          style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+        >
+          <div className="text-5xl mb-4">📬</div>
+          <h1
+            className="text-2xl font-black mb-3"
+            style={{
+              fontFamily: "'Fredoka One', sans-serif",
+              background: "linear-gradient(135deg, #FF3D9A, #8B2BE2)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            Check your email
+          </h1>
+          <p className="text-sm text-gray-600 leading-relaxed mb-2">
+            We sent a confirmation link to{" "}
+            <span className="font-bold text-gray-800">{sentToEmail}</span>. Open it on this device — you&apos;ll be signed in
+            and can play your daily PICK5.
+          </p>
+          <p className="text-xs text-gray-400 mb-6">
+            Link must open on the same site you signed up on. If it opens localhost, set{" "}
+            <code className="text-gray-600">VITE_SITE_URL</code> on Vercel and Supabase Site URL to your live domain.
+          </p>
+          <button
+            type="button"
+            className="w-full py-3.5 rounded-2xl text-white font-bold text-sm mb-3"
+            style={{
+              background: "linear-gradient(135deg, #FF3D9A, #8B2BE2)",
+              fontFamily: "'Fredoka One', sans-serif",
+            }}
+            onClick={() => {
+              setAwaitingEmailConfirm(false);
+              setSentToEmail("");
+            }}
+          >
+            Back to sign in
+          </button>
+          <button
+            type="button"
+            className="w-full text-sm text-gray-400 font-semibold"
+            onClick={() => navigate("/")}
+          >
+            ← Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

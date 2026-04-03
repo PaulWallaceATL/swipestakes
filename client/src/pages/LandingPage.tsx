@@ -3,10 +3,19 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "wouter";
-import { CheckCircle, XCircle, Coins, Trophy, Star, ChevronRight, Zap, Gift, ArrowRight } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { CheckCircle, XCircle, Coins, Trophy, Star, ChevronRight, Zap, Gift, ArrowRight, User, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
+import { useAuth } from "@/_core/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -171,9 +180,13 @@ function SwipeDemo() {
 // ─── MAIN LANDING PAGE ────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const [, navigate] = useLocation();
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [activeScreen, setActiveScreen] = useState<'home' | 'wallet' | 'betlog'>('home');
+
+  const displayName = user?.name?.trim() || user?.email || "Account";
 
   const handleWaitlist = (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,22 +218,85 @@ export default function LandingPage() {
             PICK5
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <a
-            href={getLoginUrl('/')}
-            className="text-sm font-bold px-4 py-2 rounded-xl text-gray-500"
-            style={{ fontFamily: 'Nunito, sans-serif' }}
-          >
-            Sign in
-          </a>
-          <Link href="/feed?play=1">
-            <a
-              className="text-sm font-bold px-4 py-2 rounded-xl text-white"
-              style={{ background: 'linear-gradient(135deg, #FF3D9A, #8B2BE2)', boxShadow: '0 4px 16px rgba(255,61,154,0.3)', fontFamily: 'Nunito, sans-serif' }}
-            >
-              Play Free
-            </a>
-          </Link>
+        <div className="flex min-h-10 items-center justify-end gap-2">
+          {authLoading ? (
+            <div
+              className="h-10 w-10 shrink-0 rounded-full bg-gray-200/80 animate-pulse"
+              aria-hidden
+            />
+          ) : isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white shadow-md outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-pink-400"
+                  style={{
+                    background: "linear-gradient(135deg, #FF3D9A, #8B2BE2)",
+                    boxShadow: "0 4px 16px rgba(255,61,154,0.35)",
+                  }}
+                  aria-label="Account menu"
+                >
+                  <User className="h-5 w-5 text-white" strokeWidth={2.2} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[12rem] rounded-2xl border border-gray-100 p-1 shadow-xl">
+                <DropdownMenuLabel className="font-semibold text-gray-800" style={{ fontFamily: "Nunito, sans-serif" }}>
+                  <span className="block truncate text-sm">{displayName}</span>
+                  {user?.email ? (
+                    <span className="block truncate text-xs font-normal text-gray-500">{user.email}</span>
+                  ) : null}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer rounded-xl text-sm font-semibold"
+                  style={{ fontFamily: "Nunito, sans-serif" }}
+                  onSelect={() => navigate("/feed")}
+                >
+                  Play PICK5
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer rounded-xl text-sm font-semibold text-rose-600 focus:text-rose-600"
+                  style={{ fontFamily: "Nunito, sans-serif" }}
+                  onSelect={() => {
+                    void (async () => {
+                      try {
+                        await logout();
+                        toast.success("Signed out");
+                      } catch {
+                        toast.error("Could not sign out");
+                      }
+                    })();
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <a
+                href={getLoginUrl("/")}
+                className="text-sm font-bold px-4 py-2 rounded-xl text-gray-500"
+                style={{ fontFamily: "Nunito, sans-serif" }}
+              >
+                Sign in
+              </a>
+              <Link href="/feed?play=1">
+                <a
+                  className="text-sm font-bold px-4 py-2 rounded-xl text-white"
+                  style={{
+                    background: "linear-gradient(135deg, #FF3D9A, #8B2BE2)",
+                    boxShadow: "0 4px 16px rgba(255,61,154,0.3)",
+                    fontFamily: "Nunito, sans-serif",
+                  }}
+                >
+                  Play Free
+                </a>
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 

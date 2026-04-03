@@ -342,8 +342,21 @@ Add `OPENAI_API_KEY` to your Railway environment variables.
 | `OPENAI_API_KEY` | Railway | AI confidence scoring |
 | `VITE_SUPABASE_URL` | Vercel | Frontend Supabase URL |
 | `VITE_SUPABASE_ANON_KEY` | Vercel | Frontend Supabase public key |
+| `VITE_SITE_URL` | Vercel | **Public app URL** (e.g. `https://your-app.vercel.app`) — used in confirmation-email links so they never point at `localhost` |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Vercel | Frontend Stripe |
 | `VITE_API_URL` | Vercel | Railway backend URL |
+
+### Supabase Auth URL configuration (required for email confirmation)
+
+In **Supabase Dashboard → Authentication → URL Configuration**:
+
+1. **Site URL** — set to your **production** origin (same as `VITE_SITE_URL`), not `http://localhost:3000`.
+2. **Redirect URLs** — add your production URLs, for example:
+   - `https://your-app.vercel.app/**`
+   - `https://your-app.vercel.app/login`
+   - (optional for local dev) `http://localhost:5173/**` and `http://localhost:5173/login`
+
+The app sends `emailRedirectTo` to `{VITE_SITE_URL or current origin}/login?return=...`. Those URLs must be allowed in **Redirect URLs**, or Supabase will fall back to Site URL / block the redirect.
 
 ---
 
@@ -365,6 +378,7 @@ Add `OPENAI_API_KEY` to your Railway environment variables.
 - [ ] Frontend deployed to Vercel
 - [ ] CORS configured for production domain
 - [ ] Stripe webhook URL updated to Railway endpoint
+- [ ] `VITE_SITE_URL` set on Vercel to production origin; Supabase Site URL + Redirect URLs match
 - [ ] End-to-end test: sign up → pick 5 → see results
 
 ---

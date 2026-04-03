@@ -13,6 +13,20 @@ import { handleStripeWebhook } from "../stripeRouter";
 export function createApiApp() {
   const app = express();
 
+  // Vercel may invoke the function with a truncated req.url; restore from originalUrl so
+  // /api/trpc/* matches app.use("/api/trpc", ...).
+  app.use((req, _res, next) => {
+    const origPath = req.originalUrl?.split("?")[0] ?? "";
+    const u = req.url ?? "/";
+    if (origPath.startsWith("/api") && (!u.startsWith("/api") || u === "/" || u === "")) {
+      const qs = req.originalUrl?.includes("?")
+        ? req.originalUrl.slice(req.originalUrl.indexOf("?"))
+        : "";
+      req.url = origPath + qs;
+    }
+    next();
+  });
+
   const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "")
     .split(",")
     .map((s) => s.trim())

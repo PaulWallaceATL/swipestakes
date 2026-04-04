@@ -18,11 +18,13 @@ export default async function handler(_req: IncomingMessage, res: ServerResponse
   if (process.env.DATABASE_URL) {
     try {
       const postgres = (await import("postgres")).default;
-      const sql = postgres(process.env.DATABASE_URL, {
+      const url = process.env.DATABASE_URL;
+      const sql = postgres(url, {
         max: 1,
         idle_timeout: 5,
         connect_timeout: 5,
-        ssl: process.env.DATABASE_URL.includes("supabase") ? "require" : undefined,
+        ssl: url.includes("supabase") ? "require" : undefined,
+        prepare: url.includes("pooler.supabase.com") ? false : true,
       });
       const rows = await sql`SELECT count(*) AS n FROM public.users`;
       dbOk = true;

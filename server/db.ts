@@ -10,11 +10,16 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      const client = postgres(process.env.DATABASE_URL, {
+      const url = process.env.DATABASE_URL;
+      const useSsl = url.includes("supabase");
+      // Transaction pooler (port 6543) requires prepare: false (no named prepared statements)
+      const usePooler = url.includes("pooler.supabase.com");
+      const client = postgres(url, {
         max: 10,
         idle_timeout: 20,
         connect_timeout: 10,
-        ssl: process.env.DATABASE_URL.includes("supabase") ? "require" : undefined,
+        ssl: useSsl ? "require" : undefined,
+        prepare: usePooler ? false : true,
       });
       _db = drizzle(client);
     } catch (error) {

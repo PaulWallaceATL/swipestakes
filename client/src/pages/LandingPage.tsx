@@ -1,13 +1,14 @@
 // Swipestakes — LandingPage
 // Light theme | White/off-white background | Dark text | Pink/purple accents
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { CheckCircle, XCircle, Coins, Trophy, Star, ChevronRight, Zap, Gift, ArrowRight, User, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +69,42 @@ const CREDIT_RULES = [
   { score: '4/5', credits: 10, label: 'Great Day',   color: '#10B981', emoji: '🔥' },
   { score: '3/5', credits: 5,  label: 'Good Day',    color: '#8B2BE2', emoji: '👍' },
 ];
+
+/** First instant when `timeZone`'s calendar date is strictly after `pickDay` (YYYY-MM-DD). Matches server game-day boundaries. */
+function getNextPickWindowStartMs(pickDay: string, timeZone: string): number {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const dayAt = (ms: number) => {
+    const parts = fmt.formatToParts(new Date(ms));
+    const y = parts.find((p) => p.type === "year")?.value;
+    const m = parts.find((p) => p.type === "month")?.value;
+    const d = parts.find((p) => p.type === "day")?.value;
+    return y && m && d ? `${y}-${m}-${d}` : pickDay;
+  };
+  let lo = Date.now();
+  if (dayAt(lo) > pickDay) return lo;
+  let hi = lo + 50 * 60 * 60 * 1000;
+  let guard = 0;
+  while (dayAt(hi) <= pickDay && guard++ < 40) hi += 24 * 60 * 60 * 1000;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (dayAt(mid) > pickDay) hi = mid;
+    else lo = mid + 1;
+  }
+  return lo;
+}
+
+function formatCountdown(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
 
 // ─── PHONE MOCKUP ─────────────────────────────────────────────────────────────
 
@@ -177,12 +214,73 @@ function SwipeDemo() {
   );
 }
 
+// ─── PLAY CTA (guest vs signed-in vs daily complete) ───────────────────────────
+
+function LandingPlayButton(props: {
+  variant: "hero" | "footer";
+  showSignedInNav: boolean;
+  isAuthenticated: boolean;
+  pick5DoneToday: boolean;
+  countdownText: string;
+}) {
+  const { variant, showSignedInNav, isAuthenticated, pick5DoneToday, countdownText } = props;
+  const isHero = variant === "hero";
+  const className = isHero
+    ? "flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-black text-lg text-white"
+    : "inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-black text-lg text-gray-800 bg-white";
+  const heroStyle: CSSProperties = {
+    background: "linear-gradient(135deg, #FF3D9A, #8B2BE2)",
+    boxShadow: "0 8px 32px rgba(255,61,154,0.35)",
+    fontFamily: "'Fredoka One', sans-serif",
+  };
+  const footerStyle: CSSProperties = {
+    fontFamily: "'Fredoka One', sans-serif",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+  };
+
+  if (!showSignedInNav) {
+    return (
+      <Link href="/feed?play=1">
+        <a className={className} style={isHero ? heroStyle : footerStyle}>
+          Start Playing Free <ArrowRight size={18} />
+        </a>
+      </Link>
+    );
+  }
+
+  if (isAuthenticated && pick5DoneToday) {
+    return (
+      <div
+        className={className}
+        style={{
+          ...(isHero ? heroStyle : footerStyle),
+          cursor: "default",
+          opacity: 0.92,
+        }}
+        role="status"
+        aria-live="polite"
+      >
+        Next PICK5 in {countdownText}
+      </div>
+    );
+  }
+
+  return (
+    <Link href="/feed?play=1">
+      <a className={className} style={isHero ? heroStyle : footerStyle}>
+        Pick 5 <ArrowRight size={18} />
+      </a>
+    </Link>
+  );
+}
+
 // ─── MAIN LANDING PAGE ────────────────────────────────────────────────────────
 
 export default function LandingPage() {
   const [, navigate] = useLocation();
   const {
     showSignedInNav,
+    isAuthenticated,
     accountLabel,
     accountEmail,
     profileSyncDown,
@@ -192,6 +290,43 @@ export default function LandingPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [activeScreen, setActiveScreen] = useState<'home' | 'wallet' | 'betlog'>('home');
+
+  const { data: pickStatus, refetch: refetchPickStatus } = trpc.credits.getStatus.useQuery(undefined, {
+    enabled: isAuthenticated,
+    refetchOnWindowFocus: true,
+  });
+
+  const pick5DoneToday = Boolean(
+    isAuthenticated && pickStatus != null && pickStatus.picksRemaining === 0,
+  );
+
+  const nextOpensAt = useMemo(() => {
+    if (!pick5DoneToday || !pickStatus?.pickCalendarDay || !pickStatus?.pickCalendarTimezone) return null;
+    return getNextPickWindowStartMs(pickStatus.pickCalendarDay, pickStatus.pickCalendarTimezone);
+  }, [pick5DoneToday, pickStatus?.pickCalendarDay, pickStatus?.pickCalendarTimezone]);
+
+  const rolledRef = useRef(false);
+  useEffect(() => {
+    rolledRef.current = false;
+  }, [pickStatus?.pickCalendarDay, pick5DoneToday]);
+
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    if (!pick5DoneToday || nextOpensAt == null) return;
+    const id = setInterval(() => {
+      const t = Date.now();
+      setNowTick(t);
+      const left = nextOpensAt - t;
+      if (left <= 0 && !rolledRef.current) {
+        rolledRef.current = true;
+        void refetchPickStatus();
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [pick5DoneToday, nextOpensAt, refetchPickStatus]);
+
+  const countdownText =
+    pick5DoneToday && nextOpensAt != null ? formatCountdown(nextOpensAt - nowTick) : "…";
 
   const displayName = accountLabel;
 
@@ -357,18 +492,13 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
-            <Link href="/feed?play=1">
-              <a
-                className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl font-black text-lg text-white"
-                style={{
-                  background: 'linear-gradient(135deg, #FF3D9A, #8B2BE2)',
-                  boxShadow: '0 8px 32px rgba(255,61,154,0.35)',
-                  fontFamily: "'Fredoka One', sans-serif",
-                }}
-              >
-                Start Playing Free <ArrowRight size={18} />
-              </a>
-            </Link>
+            <LandingPlayButton
+              variant="hero"
+              showSignedInNav={showSignedInNav}
+              isAuthenticated={isAuthenticated}
+              pick5DoneToday={pick5DoneToday}
+              countdownText={countdownText}
+            />
           </div>
 
           {/* Social proof */}
@@ -660,17 +790,13 @@ export default function LandingPage() {
             Join thousands of players earning free gift cards every day. No deposit, no risk.
           </p>
 
-          <Link href="/feed?play=1">
-            <a
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-black text-lg text-gray-800 bg-white"
-              style={{
-                fontFamily: "'Fredoka One', sans-serif",
-                boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-              }}
-            >
-              Start Playing Free <ArrowRight size={18} />
-            </a>
-          </Link>
+          <LandingPlayButton
+            variant="footer"
+            showSignedInNav={showSignedInNav}
+            isAuthenticated={isAuthenticated}
+            pick5DoneToday={pick5DoneToday}
+            countdownText={countdownText}
+          />
 
           <p className="text-white/60 text-xs mt-4" style={{ fontFamily: 'Nunito, sans-serif' }}>
             No credit card required · Free forever

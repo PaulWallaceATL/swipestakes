@@ -865,6 +865,7 @@ export default function HomeFeed() {
     accountLinkPending,
     accountSyncFailed,
     accountProfileMissing,
+    loading: authLoading,
     refresh,
   } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -873,23 +874,36 @@ export default function HomeFeed() {
   const [showOutOfPicks, setShowOutOfPicks] = useState(false);
   const [allDone, setAllDone] = useState(false);
   const [picksUsed, setPicksUsed] = useState(0);
-  // Track how many swipes guest has done (reset on mount)
   const guestSwipesRef = useRef(0);
 
-  // ── Live data queries ──
-  // Protected procedures — only after auth.me returns a user. Running with session-but-no-profile caused 401 → main.tsx sent users back to /login in a loop.
-  const { data: statusData, refetch: refetchStatus } = trpc.credits.getStatus.useQuery(undefined, {
+  /**
+   * "Broken auth" = Supabase session exists but auth.me didn't return a user.
+   * This means DATABASE_URL or SUPABASE_SERVICE_ROLE_KEY is wrong on the server.
+   * We must NOT let these users swipe (picks would never persist).
+   */
+  const brokenAuth =
+    !authLoading &&
+    hasSupabaseSession &&
+    !isAuthenticated &&
+    !accountLinkPending;
+
+  const { data: statusData, refetch: refetchStatus, isError: statusError } = trpc.credits.getStatus.useQuery(undefined, {
     enabled: isAuthenticated,
     refetchOnWindowFocus: true,
+    retry: 2,
   });
 
-  const { data: marketsData, refetch: refetchMarkets } = trpc.credits.getDailyMarkets.useQuery(undefined, {
+  const { data: marketsData, refetch: refetchMarkets, isError: marketsError } = trpc.credits.getDailyMarkets.useQuery(undefined, {
     enabled: isAuthenticated,
+    retry: 2,
   });
   const { data: loyaltyData, refetch: refetchLoyalty } = trpc.loyalty.getStats.useQuery(undefined, {
     enabled: isAuthenticated,
   });
   const currentStreak = loyaltyData?.stats?.currentStreak ?? 0;
+
+  /** Server queries failed (likely DB misconfigured) — don't let user swipe on stale/missing data. */
+  const serverDown = isAuthenticated && (statusError || marketsError);
 
   useEffect(() => {
     if (!hasSupabaseSession) return;
@@ -1006,10 +1020,17 @@ export default function HomeFeed() {
 
   const handleSwipe = useCallback(async (choice: 'yes' | 'no' | 'over' | 'under' | 'skip', label: string, color: string) => {
     if (firstPlayGuideOpen) return;
+    if (brokenAuth || serverDown) return;
     const market = displayPicks[currentIndex];
     if (!market) return;
 
-    if (!useGuestPick5Flow && isAuthenticated && dailyPick5Locked) {
+    if (!useGuestPick5Flow && dailyPick5Locked) {
+      return;
+    }
+
+    // Block swipe if signed in but not fully authenticated (session without profile)
+    if (hasSupabaseSession && !isAuthenticated && !useGuestPick5Flow) {
+      toast.error("Your account couldn't be verified. Check your connection or try signing out and back in.");
       return;
     }
 
@@ -1087,12 +1108,15 @@ export default function HomeFeed() {
     currentIndex,
     displayPicks,
     isAuthenticated,
+    hasSupabaseSession,
     useGuestPick5Flow,
     showAuthGate,
     stagedPicks,
     submitParlay,
     firstPlayGuideOpen,
     dailyPick5Locked,
+    brokenAuth,
+    serverDown,
   ]);
 
   const handleRefresh = useCallback(async () => {
@@ -1355,7 +1379,34 @@ export default function HomeFeed() {
             "radial-gradient(ellipse 120% 80% at 50% -20%, rgba(255,61,154,0.14) 0%, transparent 55%), radial-gradient(ellipse 90% 60% at 100% 100%, rgba(139,43,226,0.1) 0%, transparent 50%), radial-gradient(ellipse 70% 50% at 0% 80%, rgba(0,212,170,0.08) 0%, transparent 45%), linear-gradient(180deg, #FFF5FB 0%, #F0FAFF 35%, #F3F4F6 100%)",
         }}
       >
-        {showDailyCelebration ? (
+        {(brokenAuth || serverDown) ? (
+          <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 py-12 text-center">
+            <div className="text-5xl mb-4">⚠️</div>
+            <h2
+              className="text-2xl mb-2"
+              style={{ fontFamily: "'Fredoka One', sans-serif", color: "#EF4444" }}
+            >
+              {brokenAuth ? "Account not connected" : "Server issue"}
+            </h2>
+            <p
+              className="text-sm font-bold text-gray-500 max-w-xs mx-auto mb-6"
+              style={{ fontFamily: "Nunito, sans-serif" }}
+            >
+              {brokenAuth
+                ? "You're signed in but the server couldn't load your profile. This usually means DATABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing on the server."
+                : "Couldn't load your PICK5 data. The database may be unreachable."}
+            </p>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold candy-btn candy-btn-teal"
+              style={{ fontFamily: "'Fredoka One', sans-serif" }}
+            >
+              <RotateCcw size={16} />
+              Retry
+            </button>
+          </div>
+        ) : showDailyCelebration ? (
           // Daily complete — candy celebration screen
           <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 py-12 text-center">
             <motion.div

@@ -32,10 +32,11 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
   const db = await getDb();
   if (!db) {
-    console.error(
-      "[Database] DATABASE_URL missing or DB unreachable — cannot write to public.users. Check Vercel env matches this Supabase project (Settings → Database → URI).",
-    );
-    return;
+    const msg =
+      "DATABASE_URL missing or DB unreachable — cannot write to public.users. " +
+      "Check Vercel env Settings → Environment Variables → DATABASE_URL matches your Supabase project.";
+    console.error("[Database]", msg);
+    throw new Error(msg);
   }
 
   try {

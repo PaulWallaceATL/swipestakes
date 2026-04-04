@@ -44,6 +44,8 @@ function displayNameFromUser(user: {
 /**
  * Resolves the app user from a Supabase access token (Authorization: Bearer).
  * Returns null when unauthenticated — public tRPC procedures still work.
+ * Throws when the token is valid but the database is unreachable (so the
+ * caller knows the request WOULD be authenticated, preventing silent guest fallback).
  */
 export async function authenticateRequest(req: Request): Promise<User | null> {
   const token = bearerToken(req);
@@ -51,8 +53,11 @@ export async function authenticateRequest(req: Request): Promise<User | null> {
 
   const supabase = getSupabaseAdmin();
   if (!supabase) {
-    console.warn("[Supabase] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-    return null;
+    const msg =
+      "SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing. " +
+      "Set both in Vercel → Settings → Environment Variables.";
+    console.error("[Supabase Auth]", msg);
+    throw new Error(msg);
   }
 
   const {
@@ -66,6 +71,8 @@ export async function authenticateRequest(req: Request): Promise<User | null> {
 
   const signedInAt = new Date();
   const emailConfirmed = Boolean(user.email_confirmed_at);
+
+  // upsertUser now throws when DATABASE_URL is missing — let it propagate
   await db.upsertUser({
     openId: user.id,
     email: user.email ?? null,
@@ -76,5 +83,11 @@ export async function authenticateRequest(req: Request): Promise<User | null> {
   });
 
   const row = await db.getUserByOpenId(user.id);
+  if (!row) {
+    console.error(
+      "[Supabase Auth] upsertUser succeeded but getUserByOpenId returned nothing for",
+      user.id,
+    );
+  }
   return row ?? null;
 }

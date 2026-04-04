@@ -204,7 +204,12 @@ export const creditsRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
-      if (!db) return { success: false, error: "DB unavailable" };
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database unavailable — cannot save picks. Check DATABASE_URL.",
+        });
+      }
 
       const today = getGamePickDate();
 
@@ -280,7 +285,12 @@ export const creditsRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
-      if (!db) return { success: false, error: "DB unavailable" };
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database unavailable — cannot save pick. Check DATABASE_URL.",
+        });
+      }
 
       const today = getGamePickDate();
 

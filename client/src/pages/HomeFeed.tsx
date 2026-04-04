@@ -856,7 +856,13 @@ function PickCard({
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 export default function HomeFeed() {
-  const { user, isAuthenticated } = useAuth();
+  const {
+    hasSupabaseSession,
+    useGuestPick5Flow,
+    accountLinkPending,
+    accountSyncFailed,
+    refresh,
+  } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeResult, setSwipeResult] = useState<{ label: string; color: string } | null>(null);
   const [showAuthGate, setShowAuthGate] = useState(false);
@@ -868,17 +874,23 @@ export default function HomeFeed() {
 
   // ── Live data queries ──
   const { data: statusData, refetch: refetchStatus } = trpc.credits.getStatus.useQuery(undefined, {
-    enabled: isAuthenticated,
+    enabled: hasSupabaseSession,
     refetchOnWindowFocus: true,
   });
 
   const { data: marketsData, refetch: refetchMarkets } = trpc.credits.getDailyMarkets.useQuery(undefined, {
-    enabled: isAuthenticated,
+    enabled: hasSupabaseSession,
   });
   const { data: loyaltyData, refetch: refetchLoyalty } = trpc.loyalty.getStats.useQuery(undefined, {
-    enabled: isAuthenticated,
+    enabled: hasSupabaseSession,
   });
   const currentStreak = loyaltyData?.stats?.currentStreak ?? 0;
+
+  useEffect(() => {
+    if (!hasSupabaseSession) return;
+    setShowAuthGate(false);
+    guestSwipesRef.current = 0;
+  }, [hasSupabaseSession]);
 
   // Sync from backend status
   useEffect(() => {
@@ -908,7 +920,7 @@ export default function HomeFeed() {
   const [firstPlayGuideOpen, setFirstPlayGuideOpen] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined" || isAuthenticated) return;
+    if (typeof window === "undefined" || !useGuestPick5Flow) return;
     const sp = new URLSearchParams(window.location.search);
     if (sp.get("play") !== "1") return;
     if (localStorage.getItem(FIRST_PLAY_GUIDE_STORAGE_KEY)) {
@@ -917,7 +929,7 @@ export default function HomeFeed() {
     }
     setFirstPlayGuideOpen(true);
     window.history.replaceState({}, document.title, "/feed");
-  }, [isAuthenticated]);
+  }, [useGuestPick5Flow]);
 
   const completeFirstPlayGuide = useCallback(() => {
     localStorage.setItem(FIRST_PLAY_GUIDE_STORAGE_KEY, "1");
@@ -942,11 +954,12 @@ export default function HomeFeed() {
     return [...live, ...mockFill].slice(0, 20) as any[];
   }, [marketsData]);
 
-  // Live balance from backend, 0 for guests
-  const balance = isAuthenticated ? (statusData?.balance ?? 0) : 0;
-  const picksLeft = isAuthenticated ? (statusData?.picksRemaining ?? 5) : Math.max(0, 5 - guestSwipesRef.current);
+  const balance = hasSupabaseSession ? (statusData?.balance ?? 0) : 0;
+  const picksLeft = hasSupabaseSession
+    ? (statusData?.picksRemaining ?? 5)
+    : Math.max(0, 5 - guestSwipesRef.current);
 
-  const sessionCompleted = isAuthenticated ? stagedPicks.length : guestSwipesRef.current;
+  const sessionCompleted = hasSupabaseSession ? stagedPicks.length : guestSwipesRef.current;
   const pick5RoundDone =
     sessionCompleted >= 5 || showOutOfPicks || (allDone && !showOutOfPicks);
   const pick5GemsFilled = pick5RoundDone ? 5 : Math.min(5, sessionCompleted);
@@ -958,8 +971,8 @@ export default function HomeFeed() {
     const market = displayPicks[currentIndex];
     if (!market) return;
 
-    // Auth gate: guests get ALL 5 free swipes, then must sign up to continue
-    if (!isAuthenticated) {
+    // Guest demo: only without a Supabase session (avoid loop after sign-up while auth.me loads).
+    if (useGuestPick5Flow) {
       // If gate is already showing, do nothing (prevent double-trigger)
       if (showAuthGate) return;
 
@@ -1007,13 +1020,13 @@ export default function HomeFeed() {
     if (updatedPicks.length >= 5 || nextIndex >= displayPicks.length) {
       setShowOutOfPicks(true);
       // Submit parlay if authenticated and has real market IDs
-      if (isAuthenticated && updatedPicks.some(p => !String(p.marketId).startsWith('0'))) {
+      if (hasSupabaseSession && updatedPicks.some(p => !String(p.marketId).startsWith('0'))) {
         try {
           await submitParlay.mutateAsync({ picks: updatedPicks });
         } catch (_) { /* parlay still shows complete screen */ }
       }
     }
-  }, [currentIndex, displayPicks, isAuthenticated, showAuthGate, stagedPicks, submitParlay, firstPlayGuideOpen]);
+  }, [currentIndex, displayPicks, hasSupabaseSession, useGuestPick5Flow, showAuthGate, stagedPicks, submitParlay, firstPlayGuideOpen]);
 
   const handleRefresh = useCallback(() => {
     setAllDone(false);
@@ -1023,13 +1036,13 @@ export default function HomeFeed() {
     refetchStatus();
   }, [refetchMarkets, refetchStatus]);
 
-  const cardAreaMinClass = isAuthenticated ? "min-h-[calc(100dvh-13rem)]" : "min-h-[calc(100dvh-9.5rem)]";
+  const cardAreaMinClass = hasSupabaseSession ? "min-h-[calc(100dvh-13rem)]" : "min-h-[calc(100dvh-9.5rem)]";
 
   return (
     <div className="relative flex flex-col" style={{ background: "#FFFFFF" }}>
       <FirstPlayGuide open={firstPlayGuideOpen} onComplete={completeFirstPlayGuide} />
 
-      {isAuthenticated ? (
+      {hasSupabaseSession ? (
         <div
           className="flex-shrink-0 px-4 pt-4 pb-3"
           style={{
@@ -1037,6 +1050,25 @@ export default function HomeFeed() {
             borderBottom: "1px solid #EBEBEB",
           }}
         >
+          {accountLinkPending && (
+            <p
+              className="mb-2 rounded-xl bg-violet-50 px-3 py-2 text-center text-[11px] font-bold text-violet-800"
+              style={{ fontFamily: "Nunito, sans-serif" }}
+            >
+              Connecting your account…
+            </p>
+          )}
+          {accountSyncFailed && (
+            <div
+              className="mb-2 rounded-xl bg-amber-50 px-3 py-2 text-center text-[11px] font-semibold text-amber-900"
+              style={{ fontFamily: "Nunito, sans-serif" }}
+            >
+              Can&apos;t reach game server.{" "}
+              <button type="button" className="font-black underline decoration-2" onClick={() => void refresh()}>
+                Retry
+              </button>
+            </div>
+          )}
           <div
             className="rounded-2xl px-4 py-2.5 mb-3 flex items-center gap-3"
             style={{

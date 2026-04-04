@@ -82,6 +82,16 @@ export function useAuth(options?: UseAuthOptions) {
       (supaUser?.email ? supaUser.email.split("@")[0] : null) ||
       "Account";
     const profileSyncDown = apiFailed;
+    const hasSupabaseSession = Boolean(supaUser);
+    /** Guest PICK5 (5 swipes, then sign-up): only without a Supabase session — not when auth.me is slow/errors. */
+    const useGuestPick5Flow = !hasSupabaseSession;
+    const accountLinkPending =
+      hasSupabaseSession && (meQuery.isLoading || !meQuery.isFetched);
+    const accountSyncFailed =
+      hasSupabaseSession &&
+      meQuery.isFetched &&
+      !apiUser &&
+      meQuery.isError;
 
     return {
       user: apiUser,
@@ -89,6 +99,10 @@ export function useAuth(options?: UseAuthOptions) {
         !authReady || meQuery.isLoading || logoutMutation.isPending,
       error: meQuery.error ?? logoutMutation.error ?? null,
       isAuthenticated,
+      hasSupabaseSession,
+      useGuestPick5Flow,
+      accountLinkPending,
+      accountSyncFailed,
       showSignedInNav,
       accountEmail,
       accountLabel,
@@ -108,8 +122,9 @@ export function useAuth(options?: UseAuthOptions) {
 
   useEffect(() => {
     if (!redirectOnUnauthenticated) return;
-    if (meQuery.isLoading || logoutMutation.isPending) return;
+    if (logoutMutation.isPending) return;
     if (state.isAuthenticated) return;
+    if (supabaseSession?.user && (meQuery.isLoading || !meQuery.isFetched)) return;
     if (supabaseSession?.user && meQuery.isFetched && meQuery.isError) return;
     if (typeof window === "undefined") return;
     const target = redirectPath ?? getLoginUrl();

@@ -116,6 +116,7 @@ export default function LoginPage() {
           setAwaitingEmailConfirm(false);
           toast.success("Account created — you're signed in.");
           await utils.auth.me.invalidate();
+          await utils.auth.me.refetch();
           navigate(returnPath);
           return;
         }
@@ -138,6 +139,7 @@ export default function LoginPage() {
         }
         toast.success("Signed in.");
         await utils.auth.me.invalidate();
+        await utils.auth.me.refetch();
         navigate(returnPath);
       }
     } finally {

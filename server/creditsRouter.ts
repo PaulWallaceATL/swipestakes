@@ -5,6 +5,7 @@
 //   < 5 correct  → 0 credits (PARLAY LOSS)
 // Skipped picks count as incorrect for parlay purposes
 
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "./_core/trpc";
 import { isPostgresUniqueViolation } from "./_core/dbErrors";
 import { getGameDayTimezone, getGamePickDate } from "./_core/gameDay";
@@ -71,15 +72,10 @@ export const creditsRouter = router({
     const pickCalendarDay = getGamePickDate();
     const pickCalendarTimezone = getGameDayTimezone();
     if (!db) {
-      return {
-        balance: 0,
-        picksUsed: 0,
-        picksRemaining: 5,
-        todayPicks: [],
-        todayResult: null,
-        pickCalendarDay,
-        pickCalendarTimezone,
-      };
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Database unavailable — cannot load PICK5 status. Check DATABASE_URL on the server.",
+      });
     }
 
     const creditRow = await ensureCredits(ctx.user.id);
@@ -114,7 +110,12 @@ export const creditsRouter = router({
   // Get today's 5 daily markets (binary/over-under only)
   getDailyMarkets: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
-    if (!db) return { markets: [], picksUsed: 0, alreadyPicked: [] as number[] };
+    if (!db) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Database unavailable — cannot load markets. Check DATABASE_URL on the server.",
+      });
+    }
 
     const today = getGamePickDate();
 

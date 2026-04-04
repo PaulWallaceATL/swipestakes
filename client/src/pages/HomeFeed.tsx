@@ -6,6 +6,7 @@ import { usePrefersFinePointer } from "@/hooks/usePrefersFinePointer";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
 import { CheckCircle2, XCircle, Minus, Coins, RotateCcw, Trophy, Clock, Share2, Users, ChevronRight, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { TRPCClientError } from "@trpc/client";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -951,9 +952,14 @@ export default function HomeFeed() {
       refetchStatus();
       refetchLoyalty();
     },
+    onError: (err) => {
+      const msg =
+        err instanceof TRPCClientError ? err.message : "Couldn't save your PICK5.";
+      toast.error(msg);
+    },
   });
 
-  // Use backend picks if available (min 5), else always fall back to MOCK_PICKS
+  // Signed-in users only see real markets from the API — never mock cards (mock IDs don't persist to daily_picks).
   const displayPicks = useMemo(() => {
     if (
       isAuthenticated &&
@@ -962,8 +968,10 @@ export default function HomeFeed() {
       return [] as any[];
     }
     const live = marketsData?.markets ?? [];
+    if (isAuthenticated) {
+      return live.length >= 5 ? (live as any[]) : ([] as any[]);
+    }
     if (live.length >= 5) return live as any[];
-    // Pad with mock picks if live data is sparse (or user is unauthenticated)
     const liveIds = new Set(live.map((m: any) => m.id));
     const mockFill = MOCK_PICKS.filter(m => !liveIds.has(m.id));
     return [...live, ...mockFill].slice(0, 20) as any[];
@@ -1036,29 +1044,44 @@ export default function HomeFeed() {
     // Stage this pick locally
     const m = market as Record<string, any>;
     const marketType = m['marketType'] ?? (m['type'] === 'over_under' ? 'total' : 'binary');
+    const rawId = m["id"];
+    const numericId = typeof rawId === "number" ? rawId : Number(rawId);
     const newPick = {
-      marketId: Number(m['id']),
+      marketId: numericId,
       choice,
       questionSnapshot: m['question'] || m['title'] || '',
       marketType: marketType as 'binary' | 'total' | 'player_prop',
     };
 
     const updatedPicks = [...stagedPicks, newPick];
-    setStagedPicks(updatedPicks);
-
     const nextIndex = currentIndex + 1;
-    setCurrentIndex(nextIndex);
-    setPicksUsed(prev => prev + 1);
+    const roundComplete = updatedPicks.length >= 5 || nextIndex >= displayPicks.length;
 
-    // On the 5th pick: show completion modal (don't set allDone yet so card stays visible behind modal)
-    if (updatedPicks.length >= 5 || nextIndex >= displayPicks.length) {
-      setShowOutOfPicks(true);
-      // Submit parlay if authenticated and has real market IDs
-      if (isAuthenticated && updatedPicks.some(p => !String(p.marketId).startsWith('0'))) {
-        try {
-          await submitParlay.mutateAsync({ picks: updatedPicks });
-        } catch (_) { /* parlay still shows complete screen */ }
+    if (roundComplete && isAuthenticated) {
+      const allRealMarkets = updatedPicks.every(
+        (p) => Number.isInteger(p.marketId) && p.marketId > 0,
+      );
+      if (!allRealMarkets) {
+        toast.error("Today's board isn't loaded yet. Use Refresh status or reload the page.");
+        return;
       }
+      try {
+        const res = await submitParlay.mutateAsync({ picks: updatedPicks });
+        if (!res.success) {
+          toast.error(res.error ?? "Couldn't save your PICK5.");
+          return;
+        }
+      } catch {
+        return;
+      }
+    }
+
+    setStagedPicks(updatedPicks);
+    setCurrentIndex(nextIndex);
+    setPicksUsed((prev) => prev + 1);
+
+    if (roundComplete) {
+      setShowOutOfPicks(true);
     }
   }, [
     currentIndex,
@@ -1074,27 +1097,27 @@ export default function HomeFeed() {
 
   const handleRefresh = useCallback(async () => {
     if (isAuthenticated) {
-      const result = await refetchStatus();
-      const fresh = result.data;
-      if (result.isError || fresh == null) {
-        toast.error("Couldn't refresh your pick status. Try again.");
+      const [statusRes, marketsRes] = await Promise.all([refetchStatus(), refetchMarkets()]);
+      const s = statusRes.data;
+      const m = marketsRes.data;
+      if (statusRes.isError || marketsRes.isError || s == null || m == null) {
+        toast.error("Couldn't refresh. Check your connection and DATABASE_URL on the server.");
         return;
       }
-      const locked = fresh.picksRemaining === 0 || fresh.picksUsed >= 5;
+      const locked =
+        s.picksRemaining === 0 || s.picksUsed >= 5 || m.picksUsed >= 5;
       if (locked) {
         setAllDone(true);
         setShowOutOfPicks(false);
         setStagedPicks([]);
         setCurrentIndex(0);
-        await refetchMarkets();
-        toast.message("Today's PICK5 is done. Come back after the daily reset for a new board.");
+        toast.message("You already finished today's PICK5. Next board after daily reset.");
         return;
       }
       setAllDone(false);
       setCurrentIndex(0);
       setShowOutOfPicks(false);
       setStagedPicks([]);
-      await refetchMarkets();
       return;
     }
     setAllDone(false);

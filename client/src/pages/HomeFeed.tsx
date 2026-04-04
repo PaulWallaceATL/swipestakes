@@ -908,11 +908,14 @@ export default function HomeFeed() {
   }, [statusData]);
 
   useEffect(() => {
-    if (!marketsData) return;
+    if (!marketsData || !isAuthenticated) return;
     if (marketsData.picksUsed >= 5) {
       setAllDone(true);
+      setShowOutOfPicks(false);
+      setStagedPicks([]);
+      setCurrentIndex(0);
     }
-  }, [marketsData]);
+  }, [marketsData, isAuthenticated]);
 
   // Staged picks — collected locally, submitted all at once on the 5th swipe
   const [stagedPicks, setStagedPicks] = useState<Array<{
@@ -964,18 +967,31 @@ export default function HomeFeed() {
     const liveIds = new Set(live.map((m: any) => m.id));
     const mockFill = MOCK_PICKS.filter(m => !liveIds.has(m.id));
     return [...live, ...mockFill].slice(0, 20) as any[];
-  }, [isAuthenticated, marketsData, statusData?.picksRemaining]);
+  }, [isAuthenticated, marketsData, statusData?.picksRemaining, marketsData?.picksUsed]);
 
   const balance = isAuthenticated ? (statusData?.balance ?? 0) : 0;
+
+  /** True when server says today's PICK5 board is finished (status and/or markets query). */
+  const dailyPick5Locked =
+    isAuthenticated &&
+    (statusData?.picksRemaining === 0 ||
+      (statusData?.picksUsed ?? 0) >= 5 ||
+      (marketsData?.picksUsed ?? 0) >= 5);
+
   const picksLeft = useGuestPick5Flow
     ? Math.max(0, 5 - guestSwipesRef.current)
     : isAuthenticated
-      ? (statusData?.picksRemaining ?? 5)
+      ? dailyPick5Locked
+        ? 0
+        : (statusData?.picksRemaining ?? 5)
       : 5;
 
   const sessionCompleted = useGuestPick5Flow ? guestSwipesRef.current : stagedPicks.length;
   const pick5RoundDone =
-    sessionCompleted >= 5 || showOutOfPicks || (allDone && !showOutOfPicks);
+    sessionCompleted >= 5 ||
+    showOutOfPicks ||
+    (allDone && !showOutOfPicks) ||
+    dailyPick5Locked;
   const pick5GemsFilled = pick5RoundDone ? 5 : Math.min(5, sessionCompleted);
   const pick5ActiveGem =
     pick5RoundDone || sessionCompleted >= 5 ? null : Math.min(5, sessionCompleted + 1);
@@ -985,7 +1001,7 @@ export default function HomeFeed() {
     const market = displayPicks[currentIndex];
     if (!market) return;
 
-    if (!useGuestPick5Flow && isAuthenticated && (statusData?.picksRemaining ?? 5) === 0) {
+    if (!useGuestPick5Flow && isAuthenticated && dailyPick5Locked) {
       return;
     }
 
@@ -1053,32 +1069,45 @@ export default function HomeFeed() {
     stagedPicks,
     submitParlay,
     firstPlayGuideOpen,
-    statusData?.picksRemaining,
+    dailyPick5Locked,
   ]);
 
   const handleRefresh = useCallback(async () => {
     if (isAuthenticated) {
-      const { data: freshStatus } = await refetchStatus();
-      const remaining = freshStatus?.picksRemaining ?? statusData?.picksRemaining;
-      if (remaining === 0) {
+      const result = await refetchStatus();
+      const fresh = result.data;
+      if (result.isError || fresh == null) {
+        toast.error("Couldn't refresh your pick status. Try again.");
+        return;
+      }
+      const locked = fresh.picksRemaining === 0 || fresh.picksUsed >= 5;
+      if (locked) {
         setAllDone(true);
         setShowOutOfPicks(false);
         setStagedPicks([]);
         setCurrentIndex(0);
-        void refetchMarkets();
-        toast.message("Today's PICK5 is done. New picks unlock on the next game day.");
+        await refetchMarkets();
+        toast.message("Today's PICK5 is done. Come back after the daily reset for a new board.");
         return;
       }
+      setAllDone(false);
+      setCurrentIndex(0);
+      setShowOutOfPicks(false);
+      setStagedPicks([]);
+      await refetchMarkets();
+      return;
     }
     setAllDone(false);
     setCurrentIndex(0);
     setShowOutOfPicks(false);
     setStagedPicks([]);
     void refetchMarkets();
-    if (isAuthenticated) void refetchStatus();
-  }, [isAuthenticated, refetchMarkets, refetchStatus, statusData?.picksRemaining]);
+  }, [isAuthenticated, refetchMarkets, refetchStatus]);
 
   const cardAreaMinClass = hasSupabaseSession ? "min-h-[calc(100dvh-13rem)]" : "min-h-[calc(100dvh-9.5rem)]";
+
+  const showDailyCelebration =
+    !showOutOfPicks && (allDone || (isAuthenticated && dailyPick5Locked));
 
   return (
     <div className="relative flex flex-col" style={{ background: "#FFFFFF" }}>
@@ -1208,9 +1237,11 @@ export default function HomeFeed() {
           <div className="mb-2">
             <Pick5Progress filled={pick5GemsFilled} activeIndex={pick5ActiveGem} />
             <p className="text-center text-[11px] font-bold text-gray-500 mt-1.5" style={{ fontFamily: "Nunito, sans-serif" }}>
-              {pick5RoundDone
-                ? "Round complete — nice! ✨"
-                : `Pick ${pick5ActiveGem ?? 1} of 5 — ${picksLeft} left today`}
+              {dailyPick5Locked
+                ? "Today's PICK5 is done — next board after daily reset ✨"
+                : pick5RoundDone
+                  ? "Round complete — nice! ✨"
+                  : `Pick ${pick5ActiveGem ?? 1} of 5 — ${picksLeft} left today`}
             </p>
           </div>
 
@@ -1301,7 +1332,7 @@ export default function HomeFeed() {
             "radial-gradient(ellipse 120% 80% at 50% -20%, rgba(255,61,154,0.14) 0%, transparent 55%), radial-gradient(ellipse 90% 60% at 100% 100%, rgba(139,43,226,0.1) 0%, transparent 50%), radial-gradient(ellipse 70% 50% at 0% 80%, rgba(0,212,170,0.08) 0%, transparent 45%), linear-gradient(180deg, #FFF5FB 0%, #F0FAFF 35%, #F3F4F6 100%)",
         }}
       >
-        {allDone && !showOutOfPicks ? (
+        {showDailyCelebration ? (
           // Daily complete — candy celebration screen
           <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 py-12 text-center">
             <motion.div
@@ -1334,7 +1365,7 @@ export default function HomeFeed() {
               Refresh status
             </button>
           </div>
-        ) : !allDone ? (
+        ) : !allDone && !dailyPick5Locked ? (
           <>
             {/* Swipe feedback overlay — candy pop */}
             <AnimatePresence>

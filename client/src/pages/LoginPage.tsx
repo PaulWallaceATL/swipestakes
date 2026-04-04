@@ -1,8 +1,9 @@
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useLocation, useSearch } from "wouter";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { getSiteOrigin } from "@/lib/siteUrl";
+import { trpc } from "@/lib/trpc";
 
 function safeReturn(search: string): string {
   const raw = new URLSearchParams(search).get("return") ?? "/feed";
@@ -14,6 +15,8 @@ export default function LoginPage() {
   const [, navigate] = useLocation();
   const search = useSearch();
   const returnPath = safeReturn(search);
+  const utils = trpc.useUtils();
+  const serverUnreachableToastRef = useRef(false);
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -22,20 +25,60 @@ export default function LoginPage() {
   /** Email confirmation required — user must click link before signing in */
   const [awaitingEmailConfirm, setAwaitingEmailConfirm] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
+  const [sessionResolved, setSessionResolved] = useState(false);
+  const [hasSupabaseSession, setHasSupabaseSession] = useState(false);
 
-  // Already signed in (e.g. after email link) — leave login and strip auth hash from URL
   useEffect(() => {
     let cancelled = false;
     void supabase.auth.getSession().then(({ data: { session } }) => {
-      if (cancelled || !session) return;
-      const path = `${window.location.pathname}${window.location.search}`;
-      window.history.replaceState(null, "", path);
-      navigate(returnPath);
+      if (cancelled) return;
+      setHasSupabaseSession(!!session);
+      setSessionResolved(true);
     });
     return () => {
       cancelled = true;
     };
-  }, [navigate, returnPath]);
+  }, []);
+
+  // Only redirect when the API recognizes the user. Supabase-only checks caused a bounce:
+  // session in localStorage + failing auth.me (e.g. API 404) looked like "Sign in → home refresh".
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    enabled: sessionResolved && hasSupabaseSession,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (!sessionResolved || !hasSupabaseSession) return;
+    if (meQuery.isLoading) return;
+    if (!meQuery.data) return;
+    const path = `${window.location.pathname}${window.location.search}`;
+    window.history.replaceState(null, "", path);
+    navigate(returnPath);
+  }, [
+    sessionResolved,
+    hasSupabaseSession,
+    meQuery.isLoading,
+    meQuery.data,
+    navigate,
+    returnPath,
+  ]);
+
+  useEffect(() => {
+    if (!sessionResolved || !hasSupabaseSession) return;
+    if (meQuery.isLoading) return;
+    if (meQuery.data) return;
+    if (!meQuery.error) return;
+    if (serverUnreachableToastRef.current) return;
+    serverUnreachableToastRef.current = true;
+    toast.error("Can't reach the server. Check your connection or try again later.");
+  }, [
+    sessionResolved,
+    hasSupabaseSession,
+    meQuery.isLoading,
+    meQuery.data,
+    meQuery.error,
+  ]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -69,6 +112,7 @@ export default function LoginPage() {
         if (data.session) {
           setAwaitingEmailConfirm(false);
           toast.success("Account created — you're signed in.");
+          await utils.auth.me.invalidate();
           navigate(returnPath);
           return;
         }
@@ -90,12 +134,27 @@ export default function LoginPage() {
           return;
         }
         toast.success("Signed in.");
+        await utils.auth.me.invalidate();
         navigate(returnPath);
       }
     } finally {
       setLoading(false);
     }
   };
+
+  if (
+    !awaitingEmailConfirm &&
+    (!sessionResolved || (hasSupabaseSession && meQuery.isLoading))
+  ) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
+        style={{ background: "#F8F7FF", fontFamily: "Nunito, sans-serif" }}
+      >
+        <p className="text-sm font-semibold text-gray-500">Checking your session…</p>
+      </div>
+    );
+  }
 
   if (awaitingEmailConfirm) {
     return (

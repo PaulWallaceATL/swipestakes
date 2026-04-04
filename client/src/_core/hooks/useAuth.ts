@@ -19,23 +19,43 @@ export function useAuth(options?: UseAuthOptions) {
   const [supabaseSession, setSupabaseSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      setSupabaseSession(session);
-      setAuthReady(true);
-    });
+    let cancelled = false;
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return;
       setSupabaseSession(session);
+      setAuthReady(true);
       void utils.auth.me.invalidate();
     });
-    return () => subscription.unsubscribe();
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
+      setSupabaseSession(session);
+      setAuthReady(true);
+    });
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [utils.auth.me]);
 
   const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    staleTime: 30_000,
     enabled: authReady,
+    retry: (failureCount, error) => {
+      if (failureCount >= 3) return false;
+      if (
+        error instanceof TRPCClientError &&
+        (error.data?.code === "UNAUTHORIZED" ||
+          error.data?.httpStatus === 401)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    retryDelay: (attempt) => Math.min(500 * 2 ** attempt, 4_000),
   });
 
   const logoutMutation = trpc.auth.logout.useMutation({
@@ -63,18 +83,30 @@ export function useAuth(options?: UseAuthOptions) {
   }, [logoutMutation, utils]);
 
   const state = useMemo(() => {
-    localStorage.setItem(
-      "manus-runtime-user-info",
-      JSON.stringify(meQuery.data)
-    );
+    try {
+      localStorage.setItem(
+        "manus-runtime-user-info",
+        JSON.stringify(meQuery.data ?? null),
+      );
+    } catch {
+      /* private mode / quota */
+    }
     const apiUser = meQuery.data ?? null;
     const supaUser = supabaseSession?.user;
     const apiFailed =
       meQuery.isFetched && meQuery.isError && Boolean(supaUser);
     /** App features (wallet, picks, etc.) need a real row from auth.me */
     const isAuthenticated = Boolean(apiUser);
-    /** Nav / account menu: Supabase signed in even when API is unreachable */
-    const showSignedInNav = Boolean(apiUser) || apiFailed;
+    const hasSupabaseSession = Boolean(supaUser);
+    /** Session OK but API returned 200 with no user (e.g. service role / DB mismatch) — not the same as network error */
+    const accountProfileMissing =
+      hasSupabaseSession &&
+      meQuery.isFetched &&
+      !meQuery.isError &&
+      !apiUser;
+    /** Nav: show account entry whenever Supabase has a session, or API user, or known API outage */
+    const showSignedInNav =
+      Boolean(apiUser) || apiFailed || hasSupabaseSession;
     const accountEmail = apiUser?.email ?? supaUser?.email ?? null;
     const accountLabel =
       apiUser?.name?.trim() ||
@@ -82,7 +114,6 @@ export function useAuth(options?: UseAuthOptions) {
       (supaUser?.email ? supaUser.email.split("@")[0] : null) ||
       "Account";
     const profileSyncDown = apiFailed;
-    const hasSupabaseSession = Boolean(supaUser);
     /** Guest PICK5 (5 swipes, then sign-up): only without a Supabase session — not when auth.me is slow/errors. */
     const useGuestPick5Flow = !hasSupabaseSession;
     const accountLinkPending =
@@ -103,6 +134,7 @@ export function useAuth(options?: UseAuthOptions) {
       useGuestPick5Flow,
       accountLinkPending,
       accountSyncFailed,
+      accountProfileMissing,
       showSignedInNav,
       accountEmail,
       accountLabel,
@@ -126,6 +158,13 @@ export function useAuth(options?: UseAuthOptions) {
     if (state.isAuthenticated) return;
     if (supabaseSession?.user && (meQuery.isLoading || !meQuery.isFetched)) return;
     if (supabaseSession?.user && meQuery.isFetched && meQuery.isError) return;
+    if (
+      supabaseSession?.user &&
+      meQuery.isFetched &&
+      !meQuery.isError &&
+      meQuery.data == null
+    )
+      return;
     if (typeof window === "undefined") return;
     const target = redirectPath ?? getLoginUrl();
     try {
@@ -144,6 +183,7 @@ export function useAuth(options?: UseAuthOptions) {
     meQuery.isLoading,
     state.isAuthenticated,
     supabaseSession?.user,
+    meQuery.data,
   ]);
 
   return {

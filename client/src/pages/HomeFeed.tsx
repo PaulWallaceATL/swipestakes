@@ -862,6 +862,7 @@ export default function HomeFeed() {
     useGuestPick5Flow,
     accountLinkPending,
     accountSyncFailed,
+    accountProfileMissing,
     refresh,
   } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -1068,6 +1069,17 @@ export default function HomeFeed() {
               style={{ fontFamily: "Nunito, sans-serif" }}
             >
               Can&apos;t reach game server.{" "}
+              <button type="button" className="font-black underline decoration-2" onClick={() => void refresh()}>
+                Retry
+              </button>
+            </div>
+          )}
+          {accountProfileMissing && (
+            <div
+              className="mb-2 rounded-xl bg-rose-50 px-3 py-2 text-center text-[11px] font-semibold text-rose-900"
+              style={{ fontFamily: "Nunito, sans-serif" }}
+            >
+              Signed in, but your profile didn&apos;t load. Check API env (SUPABASE_SERVICE_ROLE_KEY, DATABASE_URL).{" "}
               <button type="button" className="font-black underline decoration-2" onClick={() => void refresh()}>
                 Retry
               </button>

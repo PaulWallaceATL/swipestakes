@@ -28,13 +28,24 @@ function injectUmamiIfConfigured() {
   }
 }
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      networkMode: "online",
+    },
+    mutations: {
+      networkMode: "online",
+    },
+  },
+});
 
 /** Only redirect when the browser has no Supabase session — avoids login↔feed loops if the API returns 401 while signed in (env misconfig, race before auth.me). */
 async function redirectToLoginIfUnauthorized(error: unknown) {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
   if (error.message !== UNAUTHED_ERR_MSG) return;
+  const path = window.location.pathname;
+  if (path === "/login" || path.startsWith("/login/")) return;
   const {
     data: { session },
   } = await supabase.auth.getSession();

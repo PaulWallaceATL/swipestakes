@@ -29,14 +29,22 @@ function OnboardingRoute({ onDone }: { onDone: () => void }) {
 
 function AppRouter() {
   const [, navigate] = useLocation();
-  const { data: user, isLoading } = trpc.auth.me.useQuery();
+  const { data: user, isLoading } = trpc.auth.me.useQuery(undefined, {
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+  });
   const { data: settings } = trpc.settings.get.useQuery(undefined, { enabled: !!user });
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     if (!user || isLoading || settings === undefined) return;
     const serverDone = !!(settings as any)?.onboardingCompletedAt;
-    const localDone = !!localStorage.getItem(ONBOARDING_KEY);
+    let localDone = false;
+    try {
+      localDone = !!localStorage.getItem(ONBOARDING_KEY);
+    } catch {
+      /* private mode */
+    }
     if (!serverDone && !localDone) {
       setShowOnboarding(true);
     }
@@ -46,7 +54,11 @@ function AppRouter() {
     return (
       <OnboardingFlow
         onComplete={() => {
-          localStorage.setItem(ONBOARDING_KEY, "1");
+          try {
+            localStorage.setItem(ONBOARDING_KEY, "1");
+          } catch {
+            /* ignore */
+          }
           setShowOnboarding(false);
         }}
       />
@@ -67,7 +79,11 @@ function AppRouter() {
         <Route path="/saved"><Redirect to="/profile" /></Route>
         <Route path="/onboarding">
           <OnboardingRoute onDone={() => {
-            localStorage.setItem(ONBOARDING_KEY, "1");
+            try {
+              localStorage.setItem(ONBOARDING_KEY, "1");
+            } catch {
+              /* ignore */
+            }
             navigate("/feed");
           }} />
         </Route>

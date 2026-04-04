@@ -30,6 +30,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     let cancelled = false;
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return;
+      setHasSupabaseSession(!!session);
+      setSessionResolved(true);
+    });
     void supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled) return;
       setHasSupabaseSession(!!session);
@@ -37,6 +44,7 @@ export default function LoginPage() {
     });
     return () => {
       cancelled = true;
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -92,23 +100,29 @@ export default function LoginPage() {
     }
 
     const syncProfileAndContinue = async () => {
-      try {
-        await utils.auth.me.invalidate();
-        const profile = await utils.auth.me.fetch();
-        if (!profile) {
-          toast.error(
-            "You're signed in with Supabase, but the game server could not load your profile. On Vercel add SUPABASE_SERVICE_ROLE_KEY and DATABASE_URL to the deployment that serves /api, then redeploy.",
-            { duration: 16_000 },
-          );
-          return;
+      const maxAttempts = 4;
+      let lastError = false;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        if (attempt > 0) {
+          await new Promise((r) => setTimeout(r, 400 * attempt));
         }
-        navigate(returnPath);
-      } catch {
-        toast.error(
-          "Could not reach the game server. Check that /api/ping returns JSON (Vercel root directory, or set VITE_API_URL).",
-          { duration: 14_000 },
-        );
+        try {
+          await utils.auth.me.invalidate();
+          const profile = await utils.auth.me.fetch();
+          if (profile) {
+            navigate(returnPath);
+            return;
+          }
+        } catch {
+          lastError = true;
+        }
       }
+      toast.error(
+        lastError
+          ? "Could not reach the game server. Open /api/ping — it should return JSON (fix Vercel /api or set VITE_API_URL)."
+          : "You're signed in with Supabase, but the game server did not return your profile. Add SUPABASE_SERVICE_ROLE_KEY and DATABASE_URL to the Vercel project that serves /api, then redeploy.",
+        { duration: 16_000 },
+      );
     };
 
     setLoading(true);

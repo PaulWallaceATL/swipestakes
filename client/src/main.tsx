@@ -57,6 +57,9 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
+// Same-origin /api/trpc only works if Vercel deploys `api/*` (see vercel.json).
+// If /api/* returns 404, deploy the Node server (pnpm start) e.g. on Railway and set:
+//   VITE_API_URL=https://your-service.up.railway.app   (no trailing slash)
 const apiBase = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
 const trpcClient = trpc.createClient({

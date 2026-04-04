@@ -1,0 +1,11 @@
+# Deploy the full API + optional static from this repo on Railway when Vercel
+# only serves the frontend. Set VITE_API_URL on Vercel to your Railway URL
+# (no trailing slash), e.g. https://sw1sh-production.up.railway.app
+#
+# Railway: New Project → Deploy from GitHub → same repo → start command uses package.json.
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "pnpm start"

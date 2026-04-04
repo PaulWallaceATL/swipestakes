@@ -71,7 +71,10 @@ export default function LoginPage() {
     if (!meQuery.error) return;
     if (serverUnreachableToastRef.current) return;
     serverUnreachableToastRef.current = true;
-    toast.error("Can't reach the server. Check your connection or try again later.");
+    toast.error(
+      "Game server unreachable (API 404). On Vercel: fix Root Directory = repo root, or deploy API to Railway and set VITE_API_URL to that URL.",
+      { duration: 12_000 },
+    );
   }, [
     sessionResolved,
     hasSupabaseSession,

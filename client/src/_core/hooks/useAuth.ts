@@ -2,6 +2,7 @@ import { getLoginUrl } from "@/const";
 import { supabase } from "@/lib/supabase";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
+import type { Session } from "@supabase/supabase-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type UseAuthOptions = {
@@ -15,12 +16,17 @@ export function useAuth(options?: UseAuthOptions) {
   const redirectPath = options?.redirectPath;
   const utils = trpc.useUtils();
   const [authReady, setAuthReady] = useState(false);
+  const [supabaseSession, setSupabaseSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    void supabase.auth.getSession().finally(() => setAuthReady(true));
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      setSupabaseSession(session);
+      setAuthReady(true);
+    });
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSupabaseSession(session);
       void utils.auth.me.invalidate();
     });
     return () => subscription.unsubscribe();
@@ -61,26 +67,50 @@ export function useAuth(options?: UseAuthOptions) {
       "manus-runtime-user-info",
       JSON.stringify(meQuery.data)
     );
+    const apiUser = meQuery.data ?? null;
+    const supaUser = supabaseSession?.user;
+    const apiFailed =
+      meQuery.isFetched && meQuery.isError && Boolean(supaUser);
+    /** App features (wallet, picks, etc.) need a real row from auth.me */
+    const isAuthenticated = Boolean(apiUser);
+    /** Nav / account menu: Supabase signed in even when API is unreachable */
+    const showSignedInNav = Boolean(apiUser) || apiFailed;
+    const accountEmail = apiUser?.email ?? supaUser?.email ?? null;
+    const accountLabel =
+      apiUser?.name?.trim() ||
+      apiUser?.email ||
+      (supaUser?.email ? supaUser.email.split("@")[0] : null) ||
+      "Account";
+    const profileSyncDown = apiFailed;
+
     return {
-      user: meQuery.data ?? null,
+      user: apiUser,
       loading:
         !authReady || meQuery.isLoading || logoutMutation.isPending,
       error: meQuery.error ?? logoutMutation.error ?? null,
-      isAuthenticated: Boolean(meQuery.data),
+      isAuthenticated,
+      showSignedInNav,
+      accountEmail,
+      accountLabel,
+      profileSyncDown,
     };
   }, [
     authReady,
     meQuery.data,
     meQuery.error,
+    meQuery.isFetched,
     meQuery.isLoading,
+    meQuery.isError,
     logoutMutation.error,
     logoutMutation.isPending,
+    supabaseSession,
   ]);
 
   useEffect(() => {
     if (!redirectOnUnauthenticated) return;
     if (meQuery.isLoading || logoutMutation.isPending) return;
-    if (state.user) return;
+    if (state.isAuthenticated) return;
+    if (supabaseSession?.user && meQuery.isFetched && meQuery.isError) return;
     if (typeof window === "undefined") return;
     const target = redirectPath ?? getLoginUrl();
     try {
@@ -94,8 +124,11 @@ export function useAuth(options?: UseAuthOptions) {
     redirectOnUnauthenticated,
     redirectPath,
     logoutMutation.isPending,
+    meQuery.isError,
+    meQuery.isFetched,
     meQuery.isLoading,
-    state.user,
+    state.isAuthenticated,
+    supabaseSession?.user,
   ]);
 
   return {

@@ -181,12 +181,19 @@ function SwipeDemo() {
 
 export default function LandingPage() {
   const [, navigate] = useLocation();
-  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
+  const {
+    showSignedInNav,
+    accountLabel,
+    accountEmail,
+    profileSyncDown,
+    loading: authLoading,
+    logout,
+  } = useAuth();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [activeScreen, setActiveScreen] = useState<'home' | 'wallet' | 'betlog'>('home');
 
-  const displayName = user?.name?.trim() || user?.email || "Account";
+  const displayName = accountLabel;
 
   const handleWaitlist = (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,7 +231,7 @@ export default function LandingPage() {
               className="h-10 w-10 shrink-0 rounded-full bg-gray-200/80 animate-pulse"
               aria-hidden
             />
-          ) : isAuthenticated ? (
+          ) : showSignedInNav ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -242,8 +249,14 @@ export default function LandingPage() {
               <DropdownMenuContent align="end" className="min-w-[12rem] rounded-2xl border border-gray-100 p-1 shadow-xl">
                 <DropdownMenuLabel className="font-semibold text-gray-800" style={{ fontFamily: "Nunito, sans-serif" }}>
                   <span className="block truncate text-sm">{displayName}</span>
-                  {user?.email ? (
-                    <span className="block truncate text-xs font-normal text-gray-500">{user.email}</span>
+                  {accountEmail ? (
+                    <span className="block truncate text-xs font-normal text-gray-500">{accountEmail}</span>
+                  ) : null}
+                  {profileSyncDown ? (
+                    <span className="mt-1 block text-xs font-medium text-amber-600">
+                      Can&apos;t reach game server — set <code className="text-[11px]">VITE_API_URL</code> or fix Vercel{" "}
+                      <code className="text-[11px]">/api</code>
+                    </span>
                   ) : null}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

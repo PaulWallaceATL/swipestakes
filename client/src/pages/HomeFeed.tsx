@@ -5,6 +5,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { usePrefersFinePointer } from "@/hooks/usePrefersFinePointer";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
 import { CheckCircle2, XCircle, Minus, Coins, RotateCcw, Trophy, Clock, Share2, Users, ChevronRight, ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -901,6 +902,8 @@ export default function HomeFeed() {
     setPicksUsed(statusData.picksUsed ?? 0);
     if (statusData.picksRemaining === 0) {
       setAllDone(true);
+      setShowOutOfPicks(false);
+      setStagedPicks([]);
     }
   }, [statusData]);
 
@@ -949,13 +952,19 @@ export default function HomeFeed() {
 
   // Use backend picks if available (min 5), else always fall back to MOCK_PICKS
   const displayPicks = useMemo(() => {
+    if (
+      isAuthenticated &&
+      ((statusData?.picksRemaining ?? 5) === 0 || (marketsData?.picksUsed ?? 0) >= 5)
+    ) {
+      return [] as any[];
+    }
     const live = marketsData?.markets ?? [];
     if (live.length >= 5) return live as any[];
     // Pad with mock picks if live data is sparse (or user is unauthenticated)
     const liveIds = new Set(live.map((m: any) => m.id));
     const mockFill = MOCK_PICKS.filter(m => !liveIds.has(m.id));
     return [...live, ...mockFill].slice(0, 20) as any[];
-  }, [marketsData]);
+  }, [isAuthenticated, marketsData, statusData?.picksRemaining]);
 
   const balance = isAuthenticated ? (statusData?.balance ?? 0) : 0;
   const picksLeft = useGuestPick5Flow
@@ -975,6 +984,10 @@ export default function HomeFeed() {
     if (firstPlayGuideOpen) return;
     const market = displayPicks[currentIndex];
     if (!market) return;
+
+    if (!useGuestPick5Flow && isAuthenticated && (statusData?.picksRemaining ?? 5) === 0) {
+      return;
+    }
 
     // Guest demo: only without a Supabase session (avoid loop after sign-up while auth.me loads).
     if (useGuestPick5Flow) {
@@ -1031,15 +1044,39 @@ export default function HomeFeed() {
         } catch (_) { /* parlay still shows complete screen */ }
       }
     }
-  }, [currentIndex, displayPicks, isAuthenticated, useGuestPick5Flow, showAuthGate, stagedPicks, submitParlay, firstPlayGuideOpen]);
+  }, [
+    currentIndex,
+    displayPicks,
+    isAuthenticated,
+    useGuestPick5Flow,
+    showAuthGate,
+    stagedPicks,
+    submitParlay,
+    firstPlayGuideOpen,
+    statusData?.picksRemaining,
+  ]);
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
+    if (isAuthenticated) {
+      const { data: freshStatus } = await refetchStatus();
+      const remaining = freshStatus?.picksRemaining ?? statusData?.picksRemaining;
+      if (remaining === 0) {
+        setAllDone(true);
+        setShowOutOfPicks(false);
+        setStagedPicks([]);
+        setCurrentIndex(0);
+        void refetchMarkets();
+        toast.message("Today's PICK5 is done. New picks unlock on the next game day.");
+        return;
+      }
+    }
     setAllDone(false);
     setCurrentIndex(0);
     setShowOutOfPicks(false);
-    refetchMarkets();
-    refetchStatus();
-  }, [refetchMarkets, refetchStatus]);
+    setStagedPicks([]);
+    void refetchMarkets();
+    if (isAuthenticated) void refetchStatus();
+  }, [isAuthenticated, refetchMarkets, refetchStatus, statusData?.picksRemaining]);
 
   const cardAreaMinClass = hasSupabaseSession ? "min-h-[calc(100dvh-13rem)]" : "min-h-[calc(100dvh-9.5rem)]";
 
@@ -1284,16 +1321,17 @@ export default function HomeFeed() {
                 PICK5 done today!
               </h2>
               <p className="text-sm font-bold text-gray-500" style={{ fontFamily: 'Nunito, sans-serif' }}>
-                Fresh cards tomorrow — keep your streak going 🌙
+                One PICK5 per game day — your next board unlocks at daily reset 🌙
               </p>
             </motion.div>
             <button
-              onClick={handleRefresh}
+              type="button"
+              onClick={() => void handleRefresh()}
               className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold candy-btn candy-btn-teal"
               style={{ fontFamily: "'Fredoka One', sans-serif" }}
             >
               <RotateCcw size={16} />
-              Check for new picks
+              Refresh status
             </button>
           </div>
         ) : !allDone ? (

@@ -126,6 +126,15 @@ export const creditsRouter = router({
 
     const pickedIds = new Set<number>(existingPicks.map(p => p.marketId));
 
+    // One PICK5 board per game day — no extra markets after today's board is locked in
+    if (existingPicks.length >= 5) {
+      return {
+        markets: [],
+        picksUsed: 5,
+        alreadyPicked: Array.from(pickedIds),
+      };
+    }
+
     // Helper to query open markets (closing within next 7 days)
     const queryMarkets = async () => db
       .select({

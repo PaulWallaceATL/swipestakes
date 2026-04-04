@@ -13,12 +13,30 @@ import { handleStripeWebhook } from "../stripeRouter";
 export function createApiApp() {
   const app = express();
 
-  // Vercel may invoke the function with a truncated req.url; restore from originalUrl so
-  // /api/trpc/* matches app.use("/api/trpc", ...).
+  // Vercel: nested `api/trpc/[...path].ts` + rewrites may send
+  // `/api/trpc/[...path]?match=real/procedure&batch=1` — restore so Express matches `/api/trpc`.
   app.use((req, _res, next) => {
-    const origPath = req.originalUrl?.split("?")[0] ?? "";
     const u = req.url ?? "/";
-    if (origPath.startsWith("/api") && (!u.startsWith("/api") || u === "/" || u === "")) {
+    try {
+      const parsed = new URL(u, "http://vercel.local");
+      const match = parsed.searchParams.get("match");
+      if (
+        match &&
+        !match.startsWith("/") &&
+        !match.includes("..") &&
+        (parsed.pathname.includes("[...path]") || parsed.pathname.includes("%5B...path%5D"))
+      ) {
+        parsed.searchParams.delete("match");
+        const qs = parsed.searchParams.toString();
+        req.url = `/api/trpc/${match}${qs ? `?${qs}` : ""}`;
+      }
+    } catch {
+      /* ignore malformed url */
+    }
+
+    const origPath = req.originalUrl?.split("?")[0] ?? "";
+    const u2 = req.url ?? "/";
+    if (origPath.startsWith("/api") && (!u2.startsWith("/api") || u2 === "/" || u2 === "")) {
       const qs = req.originalUrl?.includes("?")
         ? req.originalUrl.slice(req.originalUrl.indexOf("?"))
         : "";

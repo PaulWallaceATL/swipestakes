@@ -248,10 +248,14 @@ npm install -g vercel
 vercel
 ```
 
-When prompted:
-- **Framework**: Vite
+**Project root**: connect the Git repo with **Root Directory = repository root** (not `client`). The `api/` serverless routes live next to `vercel.json`; if the root is wrong, `/api/trpc` returns **404** and the SPA shows “Can’t reach game server”.
+
+After deploy, verify **`https://your-app.vercel.app/api/ping`** returns JSON `{"ok":true,...}`. Then tRPC should work on the same origin (leave `VITE_API_URL` empty), or set `VITE_API_URL` to a Railway backend if you split API and static.
+
+When prompted (or in Project Settings):
+- **Framework**: Other / null (repo ships `vercel.json` with `framework: null`)
 - **Build command**: `pnpm build`
-- **Output directory**: `dist`
+- **Output directory**: `dist/public` (must match `vercel.json`; do not use bare `dist`)
 
 Set these environment variables in the Vercel dashboard:
 ```
@@ -261,10 +265,7 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
 VITE_API_URL=https://sw1sh-production.up.railway.app
 ```
 
-Update the tRPC client URL in `client/src/main.tsx` to use `VITE_API_URL`:
-```typescript
-url: `${import.meta.env.VITE_API_URL ?? ''}/api/trpc`,
-```
+The tRPC client in `client/src/main.tsx` uses `VITE_API_URL` when set, otherwise same-origin `/api/trpc`.
 
 ---
 

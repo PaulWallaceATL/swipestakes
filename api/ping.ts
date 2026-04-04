@@ -1,6 +1,6 @@
 /**
  * Minimal handler to verify Vercel deploys `/api/*` at all.
- * Open: /api/ping → should return JSON (not 404).
+ * Open: /api/ping → JSON (not 404). Use this to verify Vercel deploys `api/*`.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 

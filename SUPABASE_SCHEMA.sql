@@ -1,6 +1,11 @@
 -- ============================================================
 -- SWIPESTAKES — Supabase PostgreSQL Schema
--- Paste this entire file into Supabase → SQL Editor → Run
+--
+-- USE THIS FILE ONLY ON A BRAND-NEW (EMPTY) DATABASE.
+-- If anything already exists (e.g. error 42710: type "user_role" already exists),
+-- do NOT paste the whole file — your project is already provisioned. Apply only
+-- the small migrations you still need, e.g. drizzle/migrations/0001_add_email_confirmed.sql
+-- and drizzle/migrations/0002_pick5_unique_indexes.sql (SQL Editor → Run each).
 -- ============================================================
 
 -- ─── ENUMS ───────────────────────────────────────────────────
@@ -384,7 +389,7 @@ CREATE TABLE daily_picks (
   id                 SERIAL PRIMARY KEY,
   "userId"           INTEGER          NOT NULL REFERENCES users(id),
   "marketId"         INTEGER          NOT NULL REFERENCES markets(id),
-  "pickDate"         VARCHAR(10)      NOT NULL,  -- 'YYYY-MM-DD' UTC
+  "pickDate"         VARCHAR(10)      NOT NULL,  -- 'YYYY-MM-DD' server game calendar (GAME_DAY_TIMEZONE)
   "pickOrder"        INTEGER          NOT NULL,  -- 1-5
   choice             pick_choice      NOT NULL,
   "questionSnapshot" TEXT,
@@ -407,7 +412,7 @@ CREATE TABLE daily_results (
   "scoreTier"     score_tier NOT NULL DEFAULT 'miss',
   "settledAt"     TIMESTAMP,
   "createdAt"     TIMESTAMP  NOT NULL DEFAULT NOW(),
-  UNIQUE ("userId", "pickDate")
+  CONSTRAINT daily_results_user_date_uid UNIQUE ("userId", "pickDate")
 );
 
 -- ─── CREDIT TRANSACTIONS ─────────────────────────────────────
@@ -447,6 +452,9 @@ CREATE INDEX idx_positions_user_id      ON positions("userId");
 CREATE INDEX idx_positions_market_id    ON positions("marketId");
 CREATE INDEX idx_daily_picks_user_date  ON daily_picks("userId", "pickDate");
 CREATE INDEX idx_daily_picks_market_id  ON daily_picks("marketId");
+-- One board per user per game day: at most one row per market and distinct pick slots 1–5
+CREATE UNIQUE INDEX daily_picks_user_date_market_uid ON daily_picks("userId", "pickDate", "marketId");
+CREATE UNIQUE INDEX daily_picks_user_date_order_uid ON daily_picks("userId", "pickDate", "pickOrder");
 CREATE INDEX idx_daily_results_user     ON daily_results("userId");
 CREATE INDEX idx_credit_tx_user         ON credit_transactions("userId");
 CREATE INDEX idx_app_notif_user         ON app_notifications("userId");

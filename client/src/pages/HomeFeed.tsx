@@ -1086,6 +1086,17 @@ export default function HomeFeed() {
               <p className="text-[11px] font-bold text-gray-500 mt-1" style={{ fontFamily: "Nunito, sans-serif" }}>
                 by Swipestakes · your daily 5-pick match
               </p>
+              {statusData?.pickCalendarDay != null && statusData.pickCalendarDay !== "" && (
+                <p
+                  className="text-[10px] font-semibold text-gray-400 mt-0.5"
+                  style={{ fontFamily: "Nunito, sans-serif" }}
+                >
+                  Game day {statusData.pickCalendarDay}
+                  {statusData.pickCalendarTimezone
+                    ? ` · ${statusData.pickCalendarTimezone.replace(/_/g, " ")}`
+                    : ""}
+                </p>
+              )}
             </div>
 
             {currentStreak > 0 && (

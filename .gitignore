@@ -116,3 +116,4 @@ client/public/__manus__/version.json
 # Manus local debug / export artifacts
 .manus/
 .manus-logs/
+.vercel

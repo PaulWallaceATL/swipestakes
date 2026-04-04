@@ -11,6 +11,7 @@ import {
   serial,
   index,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // ─── ENUMS ────────────────────────────────────────────────────────────────────
@@ -436,36 +437,47 @@ export type Credits = typeof credits.$inferSelect;
 export type InsertCredits = typeof credits.$inferInsert;
 
 // ─── DAILY PICKS ──────────────────────────────────────────────────────────────
-export const dailyPicks = pgTable("daily_picks", {
-  id: serial("id").primaryKey(),
-  userId: integer("userId").notNull(),
-  marketId: integer("marketId").notNull(),
-  pickDate: varchar("pickDate", { length: 10 }).notNull(),
-  pickOrder: integer("pickOrder").notNull(),
-  choice: pickChoiceEnum("choice").notNull(),
-  questionSnapshot: text("questionSnapshot"),
-  marketType: pickMarketTypeEnum("marketType").default("binary").notNull(),
-  result: pickResultEnum("result").default("pending").notNull(),
-  creditsAwarded: integer("creditsAwarded").default(0).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+export const dailyPicks = pgTable(
+  "daily_picks",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("userId").notNull(),
+    marketId: integer("marketId").notNull(),
+    pickDate: varchar("pickDate", { length: 10 }).notNull(),
+    pickOrder: integer("pickOrder").notNull(),
+    choice: pickChoiceEnum("choice").notNull(),
+    questionSnapshot: text("questionSnapshot"),
+    marketType: pickMarketTypeEnum("marketType").default("binary").notNull(),
+    result: pickResultEnum("result").default("pending").notNull(),
+    creditsAwarded: integer("creditsAwarded").default(0).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("daily_picks_user_date_market_uid").on(t.userId, t.pickDate, t.marketId),
+    uniqueIndex("daily_picks_user_date_order_uid").on(t.userId, t.pickDate, t.pickOrder),
+  ],
+);
 
 export type DailyPick = typeof dailyPicks.$inferSelect;
 export type InsertDailyPick = typeof dailyPicks.$inferInsert;
 
 // ─── DAILY RESULTS ────────────────────────────────────────────────────────────
-export const dailyResults = pgTable("daily_results", {
-  id: serial("id").primaryKey(),
-  userId: integer("userId").notNull(),
-  pickDate: varchar("pickDate", { length: 10 }).notNull(),
-  totalPicks: integer("totalPicks").default(0).notNull(),
-  correctPicks: integer("correctPicks").default(0).notNull(),
-  skippedPicks: integer("skippedPicks").default(0).notNull(),
-  creditsEarned: integer("creditsEarned").default(0).notNull(),
-  scoreTier: scoreTierEnum("scoreTier").default("miss").notNull(),
-  settledAt: timestamp("settledAt"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+export const dailyResults = pgTable(
+  "daily_results",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("userId").notNull(),
+    pickDate: varchar("pickDate", { length: 10 }).notNull(),
+    totalPicks: integer("totalPicks").default(0).notNull(),
+    correctPicks: integer("correctPicks").default(0).notNull(),
+    skippedPicks: integer("skippedPicks").default(0).notNull(),
+    creditsEarned: integer("creditsEarned").default(0).notNull(),
+    scoreTier: scoreTierEnum("scoreTier").default("miss").notNull(),
+    settledAt: timestamp("settledAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("daily_results_user_date_uid").on(t.userId, t.pickDate)],
+);
 
 export type DailyResult = typeof dailyResults.$inferSelect;
 export type InsertDailyResult = typeof dailyResults.$inferInsert;

@@ -1,4 +1,6 @@
 export const ENV = {
+  /** IANA timezone for PICK5 "calendar day" (same for web + native). Default US Eastern. */
+  gameDayTimezone: process.env.GAME_DAY_TIMEZONE ?? "America/New_York",
   appId: process.env.VITE_APP_ID ?? "",
   cookieSecret: process.env.JWT_SECRET ?? "",
   supabaseUrl: process.env.SUPABASE_URL ?? "",

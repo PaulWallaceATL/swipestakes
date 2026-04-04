@@ -6,6 +6,8 @@
 // Skipped picks count as incorrect for parlay purposes
 
 import { protectedProcedure, router } from "./_core/trpc";
+import { isPostgresUniqueViolation } from "./_core/dbErrors";
+import { getGameDayTimezone, getGamePickDate } from "./_core/gameDay";
 import { z } from "zod";
 import { getDb } from "./db";
 import {
@@ -17,12 +19,18 @@ import {
   markets,
   events,
 } from "../drizzle/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, type SQLWrapper } from "drizzle-orm";
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
-function todayUTC(): string {
-  return new Date().toISOString().slice(0, 10); // "2026-03-27"
+/** Serialize same-user / same-calendar-day PICK5 writes across web + mobile. */
+async function lockUserPickDayTx(
+  tx: { execute: (q: string | SQLWrapper) => Promise<unknown> },
+  userId: number,
+  pickDate: string,
+) {
+  const key = `pick5|${userId}|${pickDate}`;
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${key}::text)::bigint)`);
 }
 
 // Ensure credits row exists for user (signup bonus: 10 credits)
@@ -60,10 +68,22 @@ export const creditsRouter = router({
   // Get the user's credit balance + today's pick status
   getStatus: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
-    if (!db) return { balance: 0, picksUsed: 0, picksRemaining: 5, todayPicks: [], todayResult: null };
+    const pickCalendarDay = getGamePickDate();
+    const pickCalendarTimezone = getGameDayTimezone();
+    if (!db) {
+      return {
+        balance: 0,
+        picksUsed: 0,
+        picksRemaining: 5,
+        todayPicks: [],
+        todayResult: null,
+        pickCalendarDay,
+        pickCalendarTimezone,
+      };
+    }
 
     const creditRow = await ensureCredits(ctx.user.id);
-    const today = todayUTC();
+    const today = pickCalendarDay;
 
     const todayPicks = await db
       .select()
@@ -86,6 +106,8 @@ export const creditsRouter = router({
       picksRemaining,
       todayPicks,
       todayResult: todayResult ?? null,
+      pickCalendarDay,
+      pickCalendarTimezone,
     };
   }),
 
@@ -94,7 +116,7 @@ export const creditsRouter = router({
     const db = await getDb();
     if (!db) return { markets: [], picksUsed: 0, alreadyPicked: [] as number[] };
 
-    const today = todayUTC();
+    const today = getGamePickDate();
 
     // Get markets the user already picked today
     const existingPicks = await db
@@ -126,13 +148,14 @@ export const creditsRouter = router({
       .where(
         and(
           sql`markets.state = 'open'`,
-          sql`markets.marketType IN ('binary', 'total', 'player_prop')`,
-          // Accept markets closing within the next 7 days (not just today)
-          sql`markets.tradingCloseAt >= NOW()`,
-          sql`markets.tradingCloseAt <= DATE_ADD(NOW(), INTERVAL 7 DAY)`
-        )
+          sql`markets."marketType" IN ('binary', 'total', 'player_prop')`,
+          sql`markets."tradingCloseAt" IS NOT NULL`,
+          sql`markets."tradingCloseAt" >= NOW()`,
+          sql`markets."tradingCloseAt" <= NOW() + INTERVAL '7 days'`,
+        ),
       )
-      .orderBy(sql`RAND(DAYOFYEAR(NOW()))`) // same order for all users today
+      // Deterministic per game-calendar day (Postgres; same board for web + native)
+      .orderBy(sql`md5(concat(${markets.id}::text, ${today}))`)
       .limit(20);
 
     let allMarkets = await queryMarkets();
@@ -173,48 +196,68 @@ export const creditsRouter = router({
       const db = await getDb();
       if (!db) return { success: false, error: "DB unavailable" };
 
-      const today = todayUTC();
+      const today = getGamePickDate();
 
-      // Check if user already submitted parlay today
-      const existingPicks = await db
-        .select()
-        .from(dailyPicks)
-        .where(and(eq(dailyPicks.userId, ctx.user.id), eq(dailyPicks.pickDate, today)));
-
-      if (existingPicks.length >= 5) {
-        return { success: false, error: "Daily parlay already submitted" };
-      }
-
-      // Insert all picks
-      for (let i = 0; i < input.picks.length; i++) {
-        const pick = input.picks[i];
-        await db.insert(dailyPicks).values({
-          userId: ctx.user.id,
-          marketId: pick.marketId,
-          pickDate: today,
-          pickOrder: i + 1,
-          choice: pick.choice,
-          questionSnapshot: pick.questionSnapshot ?? null,
-          marketType: pick.marketType,
-          result: pick.choice === "skip" ? "skipped" : "pending",
-        });
-      }
-
-      // Update loyalty stats (streak, points, milestones) — non-blocking
-      let loyaltyResult = null;
       try {
-        const { updateLoyaltyOnPlay } = await import('./loyaltyRouter');
-        loyaltyResult = await updateLoyaltyOnPlay(ctx.user.id, input.picks.length);
-      } catch (e) {
-        console.error('[Loyalty] Failed to update loyalty stats:', e);
-      }
+        return await db.transaction(async (tx) => {
+          await lockUserPickDayTx(tx, ctx.user.id, today);
 
-      return {
-        success: true,
-        picksSubmitted: input.picks.length,
-        message: "Parlay locked in! Results tonight.",
-        loyalty: loyaltyResult,
-      };
+          const existingPicks = await tx
+            .select()
+            .from(dailyPicks)
+            .where(and(eq(dailyPicks.userId, ctx.user.id), eq(dailyPicks.pickDate, today)));
+
+          if (existingPicks.length >= 5) {
+            return { success: false, error: "Daily PICK5 already completed for this game day" };
+          }
+
+          if (existingPicks.length + input.picks.length > 5) {
+            return {
+              success: false,
+              error: `Only ${5 - existingPicks.length} pick(s) left for today's board`,
+            };
+          }
+
+          const startOrder = existingPicks.length;
+
+          for (let i = 0; i < input.picks.length; i++) {
+            const pick = input.picks[i];
+            await tx.insert(dailyPicks).values({
+              userId: ctx.user.id,
+              marketId: pick.marketId,
+              pickDate: today,
+              pickOrder: startOrder + i + 1,
+              choice: pick.choice,
+              questionSnapshot: pick.questionSnapshot ?? null,
+              marketType: pick.marketType,
+              result: pick.choice === "skip" ? "skipped" : "pending",
+            });
+          }
+
+          let loyaltyResult = null;
+          try {
+            const { updateLoyaltyOnPlay } = await import("./loyaltyRouter");
+            loyaltyResult = await updateLoyaltyOnPlay(ctx.user.id, input.picks.length);
+          } catch (e) {
+            console.error("[Loyalty] Failed to update loyalty stats:", e);
+          }
+
+          return {
+            success: true,
+            picksSubmitted: input.picks.length,
+            message: "Parlay locked in! Results tonight.",
+            loyalty: loyaltyResult,
+          };
+        });
+      } catch (e) {
+        if (isPostgresUniqueViolation(e)) {
+          return {
+            success: false,
+            error: "This pick was already saved (sync from another device or duplicate market).",
+          };
+        }
+        throw e;
+      }
     }),
 
   // Submit a pick (yes/no/over/under/skip)
@@ -229,46 +272,58 @@ export const creditsRouter = router({
       const db = await getDb();
       if (!db) return { success: false, error: "DB unavailable" };
 
-      const today = todayUTC();
+      const today = getGamePickDate();
 
-      // Check how many picks used today
-      const existingPicks = await db
-        .select()
-        .from(dailyPicks)
-        .where(and(eq(dailyPicks.userId, ctx.user.id), eq(dailyPicks.pickDate, today)));
+      try {
+        return await db.transaction(async (tx) => {
+          await lockUserPickDayTx(tx, ctx.user.id, today);
 
-      if (existingPicks.length >= 5) {
-        return { success: false, error: "Daily limit reached (5 picks per day)" };
+          const existingPicks = await tx
+            .select()
+            .from(dailyPicks)
+            .where(and(eq(dailyPicks.userId, ctx.user.id), eq(dailyPicks.pickDate, today)));
+
+          if (existingPicks.length >= 5) {
+            return { success: false, error: "Daily limit reached (5 picks per game day)" };
+          }
+
+          const alreadyPicked = existingPicks.find((p) => p.marketId === input.marketId);
+          if (alreadyPicked) {
+            return { success: false, error: "Already picked this market today" };
+          }
+
+          const pickOrder = existingPicks.length + 1;
+
+          await tx.insert(dailyPicks).values({
+            userId: ctx.user.id,
+            marketId: input.marketId,
+            pickDate: today,
+            pickOrder,
+            choice: input.choice,
+            questionSnapshot: input.questionSnapshot ?? null,
+            marketType: input.marketType,
+            result: input.choice === "skip" ? "skipped" : "pending",
+          });
+
+          const totalPicksToday = pickOrder;
+          const picksRemaining = Math.max(0, 5 - totalPicksToday);
+
+          return {
+            success: true,
+            picksUsed: totalPicksToday,
+            picksRemaining,
+            allUsed: totalPicksToday >= 5,
+          };
+        });
+      } catch (e) {
+        if (isPostgresUniqueViolation(e)) {
+          return {
+            success: false,
+            error: "Pick already recorded — open the app on one device or refresh.",
+          };
+        }
+        throw e;
       }
-
-      // Check not already picked this market today
-      const alreadyPicked = existingPicks.find(p => p.marketId === input.marketId);
-      if (alreadyPicked) {
-        return { success: false, error: "Already picked this market today" };
-      }
-
-      const pickOrder = existingPicks.length + 1;
-
-      await db.insert(dailyPicks).values({
-        userId: ctx.user.id,
-        marketId: input.marketId,
-        pickDate: today,
-        pickOrder,
-        choice: input.choice,
-        questionSnapshot: input.questionSnapshot ?? null,
-        marketType: input.marketType,
-        result: input.choice === "skip" ? "skipped" : "pending",
-      });
-
-      const totalPicksToday = pickOrder;
-      const picksRemaining = Math.max(0, 5 - totalPicksToday);
-
-      return {
-        success: true,
-        picksUsed: totalPicksToday,
-        picksRemaining,
-        allUsed: totalPicksToday >= 5,
-      };
     }),
 
   // Resolve today's picks (called after markets close — for demo, admin can trigger)
@@ -286,7 +341,7 @@ export const creditsRouter = router({
       const db = await getDb();
       if (!db) return { success: false };
 
-      const pickDate = input.pickDate ?? todayUTC();
+      const pickDate = input.pickDate ?? getGamePickDate();
       const resolutionMap = new Map(input.resolutions.map(r => [r.marketId, r.correctAnswer]));
 
       // Get all picks for this user on this date

@@ -15,6 +15,13 @@
       "when": 1775255698548,
       "tag": "0001_add_email_confirmed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775256000000,
+      "tag": "0002_pick5_unique_indexes",
+      "breakpoints": true
     }
   ]
 }

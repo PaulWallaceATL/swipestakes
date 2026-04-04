@@ -91,6 +91,26 @@ export default function LoginPage() {
       return;
     }
 
+    const syncProfileAndContinue = async () => {
+      try {
+        await utils.auth.me.invalidate();
+        const profile = await utils.auth.me.fetch();
+        if (!profile) {
+          toast.error(
+            "You're signed in with Supabase, but the game server could not load your profile. On Vercel add SUPABASE_SERVICE_ROLE_KEY and DATABASE_URL to the deployment that serves /api, then redeploy.",
+            { duration: 16_000 },
+          );
+          return;
+        }
+        navigate(returnPath);
+      } catch {
+        toast.error(
+          "Could not reach the game server. Check that /api/ping returns JSON (Vercel root directory, or set VITE_API_URL).",
+          { duration: 14_000 },
+        );
+      }
+    };
+
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -115,9 +135,7 @@ export default function LoginPage() {
         if (data.session) {
           setAwaitingEmailConfirm(false);
           toast.success("Account created — you're signed in.");
-          await utils.auth.me.invalidate();
-          await utils.auth.me.refetch();
-          navigate(returnPath);
+          await syncProfileAndContinue();
           return;
         }
         setSentToEmail(trimmed);
@@ -138,9 +156,7 @@ export default function LoginPage() {
           return;
         }
         toast.success("Signed in.");
-        await utils.auth.me.invalidate();
-        await utils.auth.me.refetch();
-        navigate(returnPath);
+        await syncProfileAndContinue();
       }
     } finally {
       setLoading(false);

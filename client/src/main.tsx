@@ -30,21 +30,27 @@ function injectUmamiIfConfigured() {
 
 const queryClient = new QueryClient();
 
-const redirectToLoginIfUnauthorized = (error: unknown) => {
+/** Only redirect when the browser has no Supabase session — avoids login↔feed loops if the API returns 401 while signed in (env misconfig, race before auth.me). */
+async function redirectToLoginIfUnauthorized(error: unknown) {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-
-  const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
-  if (!isUnauthorized) return;
-
+  if (error.message !== UNAUTHED_ERR_MSG) return;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (session?.user) {
+    console.warn(
+      "[Auth] Server returned 401 but Supabase session exists — staying on page. Check Vercel: SUPABASE_SERVICE_ROLE_KEY, DATABASE_URL, /api routing.",
+    );
+    return;
+  }
   window.location.href = getLoginUrl();
-};
+}
 
 queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
-    redirectToLoginIfUnauthorized(error);
+    void redirectToLoginIfUnauthorized(error);
     console.error("[API Query Error]", error);
   }
 });
@@ -52,7 +58,7 @@ queryClient.getQueryCache().subscribe(event => {
 queryClient.getMutationCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.mutation.state.error;
-    redirectToLoginIfUnauthorized(error);
+    void redirectToLoginIfUnauthorized(error);
     console.error("[API Mutation Error]", error);
   }
 });

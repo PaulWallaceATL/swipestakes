@@ -857,6 +857,7 @@ function PickCard({
 
 export default function HomeFeed() {
   const {
+    isAuthenticated,
     hasSupabaseSession,
     useGuestPick5Flow,
     accountLinkPending,
@@ -873,16 +874,17 @@ export default function HomeFeed() {
   const guestSwipesRef = useRef(0);
 
   // ── Live data queries ──
+  // Protected procedures — only after auth.me returns a user. Running with session-but-no-profile caused 401 → main.tsx sent users back to /login in a loop.
   const { data: statusData, refetch: refetchStatus } = trpc.credits.getStatus.useQuery(undefined, {
-    enabled: hasSupabaseSession,
+    enabled: isAuthenticated,
     refetchOnWindowFocus: true,
   });
 
   const { data: marketsData, refetch: refetchMarkets } = trpc.credits.getDailyMarkets.useQuery(undefined, {
-    enabled: hasSupabaseSession,
+    enabled: isAuthenticated,
   });
   const { data: loyaltyData, refetch: refetchLoyalty } = trpc.loyalty.getStats.useQuery(undefined, {
-    enabled: hasSupabaseSession,
+    enabled: isAuthenticated,
   });
   const currentStreak = loyaltyData?.stats?.currentStreak ?? 0;
 
@@ -954,12 +956,14 @@ export default function HomeFeed() {
     return [...live, ...mockFill].slice(0, 20) as any[];
   }, [marketsData]);
 
-  const balance = hasSupabaseSession ? (statusData?.balance ?? 0) : 0;
-  const picksLeft = hasSupabaseSession
-    ? (statusData?.picksRemaining ?? 5)
-    : Math.max(0, 5 - guestSwipesRef.current);
+  const balance = isAuthenticated ? (statusData?.balance ?? 0) : 0;
+  const picksLeft = useGuestPick5Flow
+    ? Math.max(0, 5 - guestSwipesRef.current)
+    : isAuthenticated
+      ? (statusData?.picksRemaining ?? 5)
+      : 5;
 
-  const sessionCompleted = hasSupabaseSession ? stagedPicks.length : guestSwipesRef.current;
+  const sessionCompleted = useGuestPick5Flow ? guestSwipesRef.current : stagedPicks.length;
   const pick5RoundDone =
     sessionCompleted >= 5 || showOutOfPicks || (allDone && !showOutOfPicks);
   const pick5GemsFilled = pick5RoundDone ? 5 : Math.min(5, sessionCompleted);
@@ -1020,13 +1024,13 @@ export default function HomeFeed() {
     if (updatedPicks.length >= 5 || nextIndex >= displayPicks.length) {
       setShowOutOfPicks(true);
       // Submit parlay if authenticated and has real market IDs
-      if (hasSupabaseSession && updatedPicks.some(p => !String(p.marketId).startsWith('0'))) {
+      if (isAuthenticated && updatedPicks.some(p => !String(p.marketId).startsWith('0'))) {
         try {
           await submitParlay.mutateAsync({ picks: updatedPicks });
         } catch (_) { /* parlay still shows complete screen */ }
       }
     }
-  }, [currentIndex, displayPicks, hasSupabaseSession, useGuestPick5Flow, showAuthGate, stagedPicks, submitParlay, firstPlayGuideOpen]);
+  }, [currentIndex, displayPicks, isAuthenticated, useGuestPick5Flow, showAuthGate, stagedPicks, submitParlay, firstPlayGuideOpen]);
 
   const handleRefresh = useCallback(() => {
     setAllDone(false);

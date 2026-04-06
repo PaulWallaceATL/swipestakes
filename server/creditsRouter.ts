@@ -165,7 +165,7 @@ export const creditsRouter = router({
         ),
       )
       // Deterministic per game-calendar day (Postgres; same board for web + native)
-      .orderBy(sql`md5(concat(${markets.id}::text, ${today}))`)
+      .orderBy(sql`md5(concat(${markets.id}::text, ${today}::text))`)
       .limit(20);
 
     let allMarkets = await queryMarkets();

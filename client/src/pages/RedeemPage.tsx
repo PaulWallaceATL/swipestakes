@@ -10,6 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { BuyPicksBanner } from "@/components/BuyPicksBanner";
 
 // ─── GIFT CARD CATALOG ────────────────────────────────────────────────────────
 
@@ -458,6 +459,11 @@ export default function RedeemPage() {
             </p>
           </div>
         )}
+
+        {/* Earn more */}
+        <div className="mb-3">
+          <BuyPicksBanner compact />
+        </div>
 
         {/* Filter tabs */}
         <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">

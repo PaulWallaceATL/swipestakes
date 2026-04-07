@@ -8,6 +8,7 @@ import {
   Settings, Share2, Trophy, Flame, CheckCircle2,
   XCircle, ChevronRight, Coins, Target
 } from "lucide-react";
+import { BuyPicksBanner } from "@/components/BuyPicksBanner";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
@@ -406,6 +407,11 @@ export default function ProfilePage() {
             <div className="text-[10px] text-white/60" style={{ fontFamily: 'Nunito, sans-serif' }}>Total Wins</div>
           </div>
         </div>
+      </div>
+
+      {/* ── BUY PICKS ── */}
+      <div className="px-5 pt-3 pb-1 bg-white">
+        <BuyPicksBanner compact />
       </div>
 
       {/* ── TABS ── */}

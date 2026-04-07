@@ -6,6 +6,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
+import { BuyPicksBanner } from "@/components/BuyPicksBanner";
 import {
   ArrowLeft, User, Bell, Tag,
   Check, LogOut, ChevronRight, Shield, History,
@@ -272,6 +273,11 @@ export default function SettingsPage() {
 
             {/* Referral */}
             <ReferralSettingsRow />
+
+            {/* Buy picks */}
+            <div className="px-4 py-3" style={{ borderBottom: "1px solid #F9FAFB" }}>
+              <BuyPicksBanner compact />
+            </div>
 
             {/* Sign out */}
             <button

@@ -59,12 +59,16 @@ async function ensureCredits(userId: number) {
 const BASE_DAILY_PICKS = 5;
 
 async function getTotalPicksAllowed(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, userId: number, pickDate: string): Promise<number> {
-  const [row] = await db
-    .select({ total: sum(extraPickPurchases.quantity) })
-    .from(extraPickPurchases)
-    .where(and(eq(extraPickPurchases.userId, userId), eq(extraPickPurchases.pickDate, pickDate)));
-  const extra = Number(row?.total ?? 0);
-  return BASE_DAILY_PICKS + extra;
+  try {
+    const [row] = await db
+      .select({ total: sum(extraPickPurchases.quantity) })
+      .from(extraPickPurchases)
+      .where(and(eq(extraPickPurchases.userId, userId), eq(extraPickPurchases.pickDate, pickDate)));
+    const extra = Number(row?.total ?? 0);
+    return BASE_DAILY_PICKS + extra;
+  } catch {
+    return BASE_DAILY_PICKS;
+  }
 }
 
 // Compute credit reward — binary parlay: all 5 correct = WIN, else LOSS

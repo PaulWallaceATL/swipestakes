@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, XCircle, MinusCircle, Clock, Coins } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { BuyPicksBanner } from "@/components/BuyPicksBanner";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
@@ -177,9 +178,10 @@ export default function BetLogPage() {
         <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Fredoka One', sans-serif" }}>
           PICK5 Results
         </h1>
-        <p className="text-xs mt-0.5 text-white/70" style={{ fontFamily: 'Nunito, sans-serif' }}>
+        <p className="text-xs mt-0.5 mb-3 text-white/70" style={{ fontFamily: 'Nunito, sans-serif' }}>
           How your last boards scored — and credits you unlocked
         </p>
+        <BuyPicksBanner compact />
       </div>
 
       {/* ── TODAY'S SCORE CARD ── */}

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { BuyPicksBanner } from "@/components/BuyPicksBanner";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
@@ -122,6 +123,11 @@ export default function WalletPage() {
             </motion.div>
           ))}
         </div>
+      </div>
+
+      {/* ── BUY PICKS ── */}
+      <div className="px-5 pt-4 pb-2 bg-white">
+        <BuyPicksBanner compact />
       </div>
 
       {/* ── HOW TO EARN ── */}

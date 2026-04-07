@@ -9,8 +9,40 @@ import { toast } from "sonner";
 import {
   ArrowLeft, User, Bell, Tag,
   Check, LogOut, ChevronRight, Shield, History,
-  Coins, Zap,
+  Coins, Zap, Share2, Users,
 } from "lucide-react";
+
+function ReferralSettingsRow() {
+  const { data } = trpc.referral.getStats.useQuery(undefined, { retry: false });
+  const code = data?.code ?? "...";
+  const referred = data?.totalReferred ?? 0;
+  const link = `https://swipestakes.vercel.app?ref=${code}`;
+
+  return (
+    <button
+      className="w-full flex items-center gap-3 p-4 text-left transition-all hover:bg-gray-50"
+      style={{ borderBottom: "1px solid #F9FAFB" }}
+      onClick={() => {
+        navigator.clipboard.writeText(link);
+        toast.success("Referral link copied!");
+      }}
+    >
+      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{ background: "rgba(245,158,11,0.1)" }}>
+        <Users size={14} style={{ color: "#F59E0B" }} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm font-semibold block text-gray-700" style={{ fontFamily: "Nunito, sans-serif" }}>
+          Refer Friends
+        </span>
+        <span className="text-[11px] text-gray-400" style={{ fontFamily: "Nunito, sans-serif" }}>
+          {referred} referred · 10 signups = 5 bonus picks
+        </span>
+      </div>
+      <Share2 size={14} className="text-gray-300" />
+    </button>
+  );
+}
 
 const CATEGORIES = [
   { id: "sports",        label: "Sports",        emoji: "🏆" },
@@ -239,28 +271,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Referral */}
-            <button
-              className="w-full flex items-center gap-3 p-4 text-left transition-all hover:bg-gray-50"
-              style={{ borderBottom: "1px solid #F9FAFB" }}
-              onClick={() => {
-                navigator.clipboard.writeText("https://swipestakes.app/ref/you");
-                toast.success("Referral link copied! 🔗");
-              }}
-            >
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "rgba(245,158,11,0.1)" }}>
-                <Zap size={14} style={{ color: "#F59E0B" }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold block text-gray-700" style={{ fontFamily: "Nunito, sans-serif" }}>
-                  Refer a Friend
-                </span>
-                <span className="text-[11px] text-gray-400" style={{ fontFamily: "Nunito, sans-serif" }}>
-                  Earn +5 bonus credits per referral
-                </span>
-              </div>
-              <ChevronRight size={14} className="text-gray-300" />
-            </button>
+            <ReferralSettingsRow />
 
             {/* Sign out */}
             <button

@@ -27,7 +27,18 @@ function OnboardingRoute({ onDone }: { onDone: () => void }) {
   return <OnboardingFlow onComplete={onDone} />;
 }
 
+function useCaptureReferralCode() {
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get("ref");
+      if (ref) localStorage.setItem("sw1sh_referral_code", ref);
+    } catch { /* SSR-safe */ }
+  }, []);
+}
+
 function AppRouter() {
+  useCaptureReferralCode();
   const [, navigate] = useLocation();
   const { data: user, isLoading } = trpc.auth.me.useQuery(undefined, {
     staleTime: 30_000,

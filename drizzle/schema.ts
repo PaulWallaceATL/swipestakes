@@ -513,3 +513,43 @@ export const redeemRequests = pgTable("redeem_requests", {
 
 export type RedeemRequest = typeof redeemRequests.$inferSelect;
 export type InsertRedeemRequest = typeof redeemRequests.$inferInsert;
+
+// ─── EXTRA PICK PURCHASES ────────────────────────────────────────────────────
+export const extraPickSourceEnum = pgEnum("extra_pick_source", ["purchase", "referral"]);
+
+export const extraPickPurchases = pgTable("extra_pick_purchases", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  pickDate: varchar("pickDate", { length: 10 }).notNull(),
+  source: extraPickSourceEnum("source").notNull(),
+  quantity: integer("quantity").default(5).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ExtraPickPurchase = typeof extraPickPurchases.$inferSelect;
+export type InsertExtraPickPurchase = typeof extraPickPurchases.$inferInsert;
+
+// ─── REFERRALS ───────────────────────────────────────────────────────────────
+export const referralStatusEnum = pgEnum("referral_status", ["pending", "completed"]);
+
+export const referrals = pgTable("referrals", {
+  id: serial("id").primaryKey(),
+  referrerId: integer("referrerId").notNull(),
+  referredUserId: integer("referredUserId"),
+  referralCode: varchar("referralCode", { length: 32 }).notNull(),
+  status: referralStatusEnum("status").default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = typeof referrals.$inferInsert;
+
+// ─── USER REFERRAL CODES ─────────────────────────────────────────────────────
+export const userReferralCodes = pgTable("user_referral_codes", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull().unique(),
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserReferralCode = typeof userReferralCodes.$inferSelect;

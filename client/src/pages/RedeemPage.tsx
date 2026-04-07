@@ -26,190 +26,68 @@ interface GiftCard {
   gradient: string;
 }
 
+const gc = (
+  id: string, brand: string, logo: string, category: string[], color: string, gradientEnd: string, popular?: boolean,
+): GiftCard => ({
+  id, brand, logo,
+  description: `$50 ${brand} Gift Card`,
+  creditCost: 250,
+  dollarValue: "$50",
+  category,
+  popular,
+  color,
+  gradient: `linear-gradient(135deg, ${color}, ${gradientEnd})`,
+});
+
 const GIFT_CARDS: GiftCard[] = [
   // Shopping
-  {
-    id: 'amazon-10',
-    brand: 'Amazon',
-    logo: '📦',
-    description: '$10 Amazon Gift Card',
-    creditCost: 50,
-    dollarValue: '$10',
-    category: ['shopping', 'tech', 'everything'],
-    popular: true,
-    color: '#FF9900',
-    gradient: 'linear-gradient(135deg, #FF9900, #FF6600)',
-  },
-  {
-    id: 'amazon-25',
-    brand: 'Amazon',
-    logo: '📦',
-    description: '$25 Amazon Gift Card',
-    creditCost: 120,
-    dollarValue: '$25',
-    category: ['shopping', 'tech', 'everything'],
-    color: '#FF9900',
-    gradient: 'linear-gradient(135deg, #FF9900, #FF6600)',
-  },
-  {
-    id: 'target-10',
-    brand: 'Target',
-    logo: '🎯',
-    description: '$10 Target Gift Card',
-    creditCost: 50,
-    dollarValue: '$10',
-    category: ['shopping', 'grocery', 'home'],
-    color: '#CC0000',
-    gradient: 'linear-gradient(135deg, #CC0000, #990000)',
-  },
-  {
-    id: 'walmart-10',
-    brand: 'Walmart',
-    logo: '🏪',
-    description: '$10 Walmart Gift Card',
-    creditCost: 50,
-    dollarValue: '$10',
-    category: ['shopping', 'grocery', 'everything'],
-    color: '#0071CE',
-    gradient: 'linear-gradient(135deg, #0071CE, #004C97)',
-  },
+  gc("amazon",     "Amazon",       "https://logo.clearbit.com/amazon.com",       ["shopping", "tech", "everything"],             "#FF9900", "#FF6600", true),
+  gc("target",     "Target",       "https://logo.clearbit.com/target.com",       ["shopping", "grocery", "home"],                "#CC0000", "#990000"),
+  gc("walmart",    "Walmart",      "https://logo.clearbit.com/walmart.com",      ["shopping", "grocery", "everything"],           "#0071CE", "#004C97"),
+  gc("costco",     "Costco",       "https://logo.clearbit.com/costco.com",       ["shopping", "grocery", "everything"],           "#E31837", "#005DAA"),
+  gc("bestbuy",    "Best Buy",     "https://logo.clearbit.com/bestbuy.com",      ["shopping", "tech"],                            "#0046BE", "#003399"),
+  gc("sephora",    "Sephora",      "https://logo.clearbit.com/sephora.com",      ["shopping", "fashion"],                         "#000000", "#333333"),
+  gc("nordstrom",  "Nordstrom",    "https://logo.clearbit.com/nordstrom.com",    ["shopping", "fashion"],                         "#1B1B1B", "#444444"),
+  gc("macys",      "Macy's",       "https://logo.clearbit.com/macys.com",        ["shopping", "fashion"],                         "#E21A2C", "#B0141F"),
+
   // Food & Drink
-  {
-    id: 'starbucks-10',
-    brand: 'Starbucks',
-    logo: '☕',
-    description: '$10 Starbucks Card',
-    creditCost: 50,
-    dollarValue: '$10',
-    category: ['food', 'coffee', 'drinks'],
-    popular: true,
-    color: '#00704A',
-    gradient: 'linear-gradient(135deg, #00704A, #1E3932)',
-  },
-  {
-    id: 'doordash-15',
-    brand: 'DoorDash',
-    logo: '🛵',
-    description: '$15 DoorDash Credit',
-    creditCost: 70,
-    dollarValue: '$15',
-    category: ['food', 'delivery'],
-    color: '#FF3008',
-    gradient: 'linear-gradient(135deg, #FF3008, #CC2600)',
-  },
-  {
-    id: 'chipotle-10',
-    brand: 'Chipotle',
-    logo: '🌯',
-    description: '$10 Chipotle Card',
-    creditCost: 50,
-    dollarValue: '$10',
-    category: ['food', 'restaurant'],
-    color: '#A81612',
-    gradient: 'linear-gradient(135deg, #A81612, #7A100D)',
-  },
-  {
-    id: 'ubereats-15',
-    brand: 'Uber Eats',
-    logo: '🍔',
-    description: '$15 Uber Eats Credit',
-    creditCost: 70,
-    dollarValue: '$15',
-    category: ['food', 'delivery'],
-    color: '#06C167',
-    gradient: 'linear-gradient(135deg, #06C167, #048A49)',
-  },
+  gc("starbucks",  "Starbucks",    "https://logo.clearbit.com/starbucks.com",    ["food", "coffee", "drinks"],                    "#00704A", "#1E3932", true),
+  gc("doordash",   "DoorDash",     "https://logo.clearbit.com/doordash.com",     ["food", "delivery"],                            "#FF3008", "#CC2600"),
+  gc("ubereats",   "Uber Eats",    "https://logo.clearbit.com/ubereats.com",     ["food", "delivery"],                            "#06C167", "#048A49"),
+  gc("chipotle",   "Chipotle",     "https://logo.clearbit.com/chipotle.com",     ["food", "restaurant"],                          "#A81612", "#7A100D"),
+  gc("chickfila",  "Chick-fil-A",  "https://logo.clearbit.com/chick-fil-a.com",  ["food", "restaurant"],                          "#E51636", "#B3102A"),
+  gc("grubhub",    "Grubhub",      "https://logo.clearbit.com/grubhub.com",      ["food", "delivery"],                            "#F63440", "#CC2A34"),
+
   // Entertainment
-  {
-    id: 'netflix-15',
-    brand: 'Netflix',
-    logo: '🎬',
-    description: '$15 Netflix Gift Card',
-    creditCost: 70,
-    dollarValue: '$15',
-    category: ['entertainment', 'streaming', 'movies'],
-    popular: true,
-    color: '#E50914',
-    gradient: 'linear-gradient(135deg, #E50914, #B20710)',
-  },
-  {
-    id: 'spotify-10',
-    brand: 'Spotify',
-    logo: '🎵',
-    description: '$10 Spotify Gift Card',
-    creditCost: 50,
-    dollarValue: '$10',
-    category: ['entertainment', 'music', 'streaming'],
-    color: '#1DB954',
-    gradient: 'linear-gradient(135deg, #1DB954, #158A3E)',
-  },
-  {
-    id: 'apple-10',
-    brand: 'Apple',
-    logo: '🍎',
-    description: '$10 Apple Gift Card',
-    creditCost: 50,
-    dollarValue: '$10',
-    category: ['tech', 'entertainment', 'apps'],
-    color: '#555555',
-    gradient: 'linear-gradient(135deg, #555555, #222222)',
-  },
-  {
-    id: 'steam-20',
-    brand: 'Steam',
-    logo: '🎮',
-    description: '$20 Steam Wallet',
-    creditCost: 95,
-    dollarValue: '$20',
-    category: ['gaming', 'entertainment', 'tech'],
-    color: '#1B2838',
-    gradient: 'linear-gradient(135deg, #1B2838, #2A475E)',
-  },
-  // Sports
-  {
-    id: 'nike-25',
-    brand: 'Nike',
-    logo: '👟',
-    description: '$25 Nike Gift Card',
-    creditCost: 120,
-    dollarValue: '$25',
-    category: ['sports', 'fashion', 'fitness'],
-    color: '#111111',
-    gradient: 'linear-gradient(135deg, #111111, #333333)',
-  },
-  {
-    id: 'fanatics-20',
-    brand: 'Fanatics',
-    logo: '🏆',
-    description: '$20 Fanatics Gift Card',
-    creditCost: 95,
-    dollarValue: '$20',
-    category: ['sports', 'nba', 'nfl', 'mlb'],
-    color: '#003087',
-    gradient: 'linear-gradient(135deg, #003087, #001A4D)',
-  },
-  // Visa/Prepaid
-  {
-    id: 'visa-25',
-    brand: 'Visa Prepaid',
-    logo: '💳',
-    description: '$25 Visa Prepaid Card',
-    creditCost: 130,
-    dollarValue: '$25',
-    category: ['everything', 'cash'],
-    color: '#1A1F71',
-    gradient: 'linear-gradient(135deg, #1A1F71, #F7B600)',
-  },
+  gc("netflix",    "Netflix",      "https://logo.clearbit.com/netflix.com",      ["entertainment", "streaming", "movies"],         "#E50914", "#B20710", true),
+  gc("spotify",    "Spotify",      "https://logo.clearbit.com/spotify.com",      ["entertainment", "music", "streaming"],          "#1DB954", "#158A3E"),
+  gc("apple",      "Apple",        "https://logo.clearbit.com/apple.com",        ["tech", "entertainment", "apps"],                "#555555", "#222222"),
+  gc("disney",     "Disney+",      "https://logo.clearbit.com/disneyplus.com",   ["entertainment", "streaming", "movies"],         "#113CCF", "#0D2D9E"),
+  gc("hulu",       "Hulu",         "https://logo.clearbit.com/hulu.com",         ["entertainment", "streaming"],                   "#1CE783", "#17B86A"),
+  gc("playstation","PlayStation",   "https://logo.clearbit.com/playstation.com",  ["gaming", "entertainment", "tech"],              "#003087", "#00246B"),
+  gc("xbox",       "Xbox",         "https://logo.clearbit.com/xbox.com",         ["gaming", "entertainment", "tech"],              "#107C10", "#0B5B0B"),
+  gc("steam",      "Steam",        "https://logo.clearbit.com/steampowered.com", ["gaming", "entertainment", "tech"],              "#1B2838", "#2A475E"),
+
+  // Fashion & Sports
+  gc("nike",       "Nike",         "https://logo.clearbit.com/nike.com",         ["sports", "fashion", "fitness"],                 "#111111", "#333333"),
+  gc("adidas",     "Adidas",       "https://logo.clearbit.com/adidas.com",       ["sports", "fashion", "fitness"],                 "#000000", "#333333"),
+  gc("fanatics",   "Fanatics",     "https://logo.clearbit.com/fanatics.com",     ["sports", "nba", "nfl", "mlb"],                 "#003087", "#001A4D"),
+  gc("footlocker", "Foot Locker",  "https://logo.clearbit.com/footlocker.com",   ["sports", "fashion"],                            "#000000", "#2D2D2D"),
+  gc("lululemon",  "Lululemon",    "https://logo.clearbit.com/lululemon.com",    ["sports", "fashion", "fitness"],                 "#D31334", "#A60F29"),
+
+  // General / Prepaid
+  gc("visa",       "Visa Prepaid",       "https://logo.clearbit.com/visa.com",        ["everything", "cash"],  "#1A1F71", "#F7B600"),
+  gc("mastercard", "Mastercard Prepaid",  "https://logo.clearbit.com/mastercard.com",  ["everything", "cash"],  "#EB001B", "#F79E1B"),
 ];
 
 // Category → shopping preference mapping
 const CATEGORY_MAP: Record<string, string[]> = {
   sports: ['sports', 'nba', 'nfl', 'mlb', 'fitness'],
   food: ['food', 'delivery', 'restaurant', 'coffee', 'drinks'],
-  entertainment: ['entertainment', 'streaming', 'music', 'movies', 'gaming'],
+  entertainment: ['entertainment', 'streaming', 'music', 'movies'],
   shopping: ['shopping', 'everything', 'home', 'grocery'],
-  tech: ['tech', 'apps'],
   fashion: ['fashion'],
+  gaming: ['gaming'],
 };
 
 // ─── GIFT CARD TILE ───────────────────────────────────────────────────────────
@@ -242,7 +120,7 @@ function GiftCardTile({
         className="h-20 flex items-center justify-center relative"
         style={{ background: card.gradient }}
       >
-        <span style={{ fontSize: 36 }}>{card.logo}</span>
+        <img src={card.logo} alt={card.brand} className="w-9 h-9 rounded-lg object-contain" style={{ background: '#fff' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).insertAdjacentText('afterend', card.brand[0]); }} />
         {card.popular && (
           <div
             className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
@@ -330,7 +208,7 @@ function ConfirmModal({
           className="w-full h-28 rounded-2xl flex items-center justify-center mb-5"
           style={{ background: card.gradient }}
         >
-          <span style={{ fontSize: 48 }}>{card.logo}</span>
+          <img src={card.logo} alt={card.brand} className="w-12 h-12 rounded-xl object-contain" style={{ background: '#fff' }} />
         </div>
 
         <h3 className="text-xl font-black mb-1" style={{ fontFamily: 'Poppins, sans-serif', color: '#1a1a2e' }}>
@@ -407,7 +285,7 @@ function SuccessScreen({ card, onDone }: { card: GiftCard; onDone: () => void })
         className="w-24 h-24 rounded-3xl flex items-center justify-center mb-6"
         style={{ background: card.gradient, boxShadow: `0 12px 40px ${card.color}44` }}
       >
-        <span style={{ fontSize: 44 }}>{card.logo}</span>
+        <img src={card.logo} alt={card.brand} className="w-11 h-11 rounded-xl object-contain" style={{ background: '#fff' }} />
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
@@ -487,7 +365,8 @@ export default function RedeemPage() {
     { id: 'shopping', label: '🛍️ Shop' },
     { id: 'entertainment', label: '🎬 Fun' },
     { id: 'sports', label: '🏆 Sports' },
-    { id: 'tech', label: '💻 Tech' },
+    { id: 'fashion', label: '👗 Fashion' },
+    { id: 'gaming', label: '🎮 Gaming' },
   ];
 
   const filteredCards = useMemo(() => {

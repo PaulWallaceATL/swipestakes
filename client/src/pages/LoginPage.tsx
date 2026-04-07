@@ -16,6 +16,12 @@ export default function LoginPage() {
   const search = useSearch();
   const returnPath = safeReturn(search);
   const utils = trpc.useUtils();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) localStorage.setItem("sw1sh_referral_code", ref);
+  }, []);
   const serverUnreachableToastRef = useRef(false);
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");

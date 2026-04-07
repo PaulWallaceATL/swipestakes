@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
 import type { Session } from "@supabase/supabase-js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -185,6 +185,19 @@ export function useAuth(options?: UseAuthOptions) {
     supabaseSession?.user,
     meQuery.data,
   ]);
+
+  const claimReferral = trpc.referral.claimReferral.useMutation();
+  const referralClaimedRef = useRef(false);
+  useEffect(() => {
+    if (!state.isAuthenticated || referralClaimedRef.current) return;
+    try {
+      const code = localStorage.getItem("sw1sh_referral_code");
+      if (!code) return;
+      referralClaimedRef.current = true;
+      localStorage.removeItem("sw1sh_referral_code");
+      claimReferral.mutate({ referralCode: code });
+    } catch { /* ignore */ }
+  }, [state.isAuthenticated, claimReferral]);
 
   return {
     ...state,

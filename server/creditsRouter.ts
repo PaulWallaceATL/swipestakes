@@ -17,10 +17,11 @@ import {
   dailyResults,
   creditTransactions,
   redeemRequests,
+  extraPickPurchases,
   markets,
   events,
 } from "../drizzle/schema";
-import { eq, and, desc, sql, type SQLWrapper } from "drizzle-orm";
+import { eq, and, desc, sql, sum, type SQLWrapper } from "drizzle-orm";
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,17 @@ async function ensureCredits(userId: number) {
     [row] = await db.select().from(credits).where(eq(credits.userId, userId)).limit(1);
   }
   return row;
+}
+
+const BASE_DAILY_PICKS = 5;
+
+async function getTotalPicksAllowed(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, userId: number, pickDate: string): Promise<number> {
+  const [row] = await db
+    .select({ total: sum(extraPickPurchases.quantity) })
+    .from(extraPickPurchases)
+    .where(and(eq(extraPickPurchases.userId, userId), eq(extraPickPurchases.pickDate, pickDate)));
+  const extra = Number(row?.total ?? 0);
+  return BASE_DAILY_PICKS + extra;
 }
 
 // Compute credit reward — binary parlay: all 5 correct = WIN, else LOSS
@@ -93,13 +105,15 @@ export const creditsRouter = router({
       .where(and(eq(dailyResults.userId, ctx.user.id), eq(dailyResults.pickDate, today)))
       .limit(1);
 
+    const totalAllowed = await getTotalPicksAllowed(db, ctx.user.id, today);
     const picksUsed = todayPicks.length;
-    const picksRemaining = Math.max(0, 5 - picksUsed);
+    const picksRemaining = Math.max(0, totalAllowed - picksUsed);
 
     return {
       balance: creditRow?.balance ?? 0,
       picksUsed,
       picksRemaining,
+      totalPicksAllowed: totalAllowed,
       todayPicks,
       todayResult: todayResult ?? null,
       pickCalendarDay,
@@ -126,15 +140,18 @@ export const creditsRouter = router({
       .where(and(eq(dailyPicks.userId, ctx.user.id), eq(dailyPicks.pickDate, today)));
 
     const pickedIds = new Set<number>(existingPicks.map(p => p.marketId));
+    const totalAllowed = await getTotalPicksAllowed(db, ctx.user.id, today);
 
-    // One PICK5 board per game day — no extra markets after today's board is locked in
-    if (existingPicks.length >= 5) {
+    if (existingPicks.length >= totalAllowed) {
       return {
         markets: [],
-        picksUsed: 5,
+        picksUsed: existingPicks.length,
+        totalPicksAllowed: totalAllowed,
         alreadyPicked: Array.from(pickedIds),
       };
     }
+
+    const picksNeeded = totalAllowed - existingPicks.length;
 
     // Helper to query open markets (closing within next 7 days)
     const queryMarkets = async () => db
@@ -181,13 +198,13 @@ export const creditsRouter = router({
       }
     }
 
-    // Pick 5 that user hasn't picked yet, or first 5 if fresh
     const unpicked = allMarkets.filter(m => !pickedIds.has(m.id));
-    const dailyBatch = unpicked.slice(0, 5);
+    const dailyBatch = unpicked.slice(0, picksNeeded);
 
     return {
       markets: dailyBatch,
       picksUsed: existingPicks.length,
+      totalPicksAllowed: totalAllowed,
       alreadyPicked: Array.from(pickedIds),
     };
   }),
@@ -222,14 +239,16 @@ export const creditsRouter = router({
             .from(dailyPicks)
             .where(and(eq(dailyPicks.userId, ctx.user.id), eq(dailyPicks.pickDate, today)));
 
-          if (existingPicks.length >= 5) {
-            return { success: false, error: "Daily PICK5 already completed for this game day" };
+          const totalAllowed = await getTotalPicksAllowed(db, ctx.user.id, today);
+
+          if (existingPicks.length >= totalAllowed) {
+            return { success: false, error: "All picks used for today. Buy more or wait for the next game day." };
           }
 
-          if (existingPicks.length + input.picks.length > 5) {
+          if (existingPicks.length + input.picks.length > totalAllowed) {
             return {
               success: false,
-              error: `Only ${5 - existingPicks.length} pick(s) left for today's board`,
+              error: `Only ${totalAllowed - existingPicks.length} pick(s) left for today's board`,
             };
           }
 
@@ -303,8 +322,10 @@ export const creditsRouter = router({
             .from(dailyPicks)
             .where(and(eq(dailyPicks.userId, ctx.user.id), eq(dailyPicks.pickDate, today)));
 
-          if (existingPicks.length >= 5) {
-            return { success: false, error: "Daily limit reached (5 picks per game day)" };
+          const totalAllowed = await getTotalPicksAllowed(db, ctx.user.id, today);
+
+          if (existingPicks.length >= totalAllowed) {
+            return { success: false, error: "All picks used. Buy more or wait for the next game day." };
           }
 
           const alreadyPicked = existingPicks.find((p) => p.marketId === input.marketId);
@@ -326,7 +347,7 @@ export const creditsRouter = router({
           });
 
           const totalPicksToday = pickOrder;
-          const picksRemaining = Math.max(0, 5 - totalPicksToday);
+          const picksRemaining = Math.max(0, totalAllowed - totalPicksToday);
 
           return {
             success: true,
@@ -344,6 +365,36 @@ export const creditsRouter = router({
         }
         throw e;
       }
+    }),
+
+  // Purchase 5 extra picks for $5 (payment integration placeholder)
+  purchaseExtraPicks: protectedProcedure
+    .input(z.object({
+      paymentIntentId: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input: _input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database unavailable.",
+        });
+      }
+      const today = getGamePickDate();
+
+      // TODO: validate Stripe paymentIntentId when payment is enforced
+      // const PAYMENT_ENFORCED = false;
+
+      await db.insert(extraPickPurchases).values({
+        userId: ctx.user.id,
+        pickDate: today,
+        source: "purchase",
+        quantity: 5,
+      });
+
+      const totalAllowed = await getTotalPicksAllowed(db, ctx.user.id, today);
+
+      return { success: true, totalPicksAllowed: totalAllowed };
     }),
 
   // Resolve today's picks (called after markets close — for demo, admin can trigger)

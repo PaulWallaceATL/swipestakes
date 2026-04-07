@@ -4,7 +4,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { usePrefersFinePointer } from "@/hooks/usePrefersFinePointer";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
-import { CheckCircle2, XCircle, Minus, Coins, RotateCcw, Trophy, Clock, Share2, Users, ChevronRight, ChevronDown } from "lucide-react";
+import { CheckCircle2, XCircle, Minus, Coins, RotateCcw, Trophy, Clock, Share2, Users, ChevronRight, ChevronDown, ShoppingCart, Gift, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { TRPCClientError } from "@trpc/client";
 import { trpc } from "@/lib/trpc";
@@ -464,19 +464,159 @@ function AuthGateModal() {
   );
 }
 
+// ─── BUY MORE PICKS MODAL ─────────────────────────────────────────────────────
+
+function BuyPicksModal({ onClose, onPurchased }: { onClose: () => void; onPurchased: () => void }) {
+  const purchaseMutation = trpc.credits.purchaseExtraPicks.useMutation({
+    onSuccess: (res) => {
+      if (res.success) {
+        toast.success("5 extra picks unlocked!");
+        onPurchased();
+      }
+    },
+    onError: () => toast.error("Purchase failed. Try again."),
+  });
+  const referralQuery = trpc.referral.getStats.useQuery(undefined, { retry: false });
+  const referralCode = referralQuery.data?.code ?? "...";
+  const referredCount = referralQuery.data?.totalReferred ?? 0;
+  const nextMilestone = Math.ceil((referredCount + 1) / 10) * 10;
+
+  const handleBuy = () => purchaseMutation.mutate({});
+
+  const handleShareReferral = async () => {
+    const url = `https://swipestakes.vercel.app?ref=${referralCode}`;
+    const text = `Join me on Swipestakes! Free daily picks, real gift cards. Use my link: ${url}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Swipestakes", text, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Referral link copied!");
+      }
+    } catch { /* cancelled */ }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="absolute inset-0 z-50 flex items-center justify-center px-6"
+      style={{ background: "rgba(5,2,20,0.8)", backdropFilter: "blur(12px)" }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.85, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="w-full rounded-3xl p-6 text-center"
+        style={{
+          background: "linear-gradient(160deg, #2d1065 0%, #1a0a3d 100%)",
+          maxWidth: 380,
+          boxShadow: "0 24px 64px rgba(0,0,0,0.6), 0 0 0 2px rgba(255,61,154,0.25)",
+        }}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+      >
+        <div className="text-5xl mb-3">🎯</div>
+        <h2
+          className="text-2xl mb-1"
+          style={{
+            fontFamily: "'Fredoka One', sans-serif",
+            background: "linear-gradient(135deg, #FFD700, #FF3D9A)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          Want more picks?
+        </h2>
+        <p className="text-xs mb-5" style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.55)" }}>
+          Get another 5 picks instantly
+        </p>
+
+        <button
+          onClick={handleBuy}
+          disabled={purchaseMutation.isPending}
+          className="w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2.5 mb-3"
+          style={{
+            background: "linear-gradient(135deg, #00D4AA, #00B894)",
+            color: "#fff",
+            boxShadow: "0 4px 0 rgba(0,80,60,0.5), 0 6px 20px rgba(0,212,170,0.4)",
+            fontFamily: "'Fredoka One', sans-serif",
+            letterSpacing: "0.03em",
+          }}
+        >
+          <ShoppingCart size={18} />
+          {purchaseMutation.isPending ? "Processing..." : "Buy 5 Picks — $5"}
+        </button>
+
+        <div
+          className="rounded-2xl p-4 mb-4"
+          style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(139,43,226,0.3)" }}
+        >
+          <p className="text-xs font-bold mb-1" style={{ fontFamily: "'Fredoka One', sans-serif", color: "#BB86FC" }}>
+            Or earn free picks
+          </p>
+          <p className="text-[11px] mb-3" style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.5)" }}>
+            Invite 10 friends who sign up = 5 bonus picks
+          </p>
+          <div className="flex items-center justify-center gap-1 mb-3">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-5 h-5 rounded-full text-[9px] font-bold flex items-center justify-center"
+                style={{
+                  background: i < referredCount ? "linear-gradient(135deg, #FF3D9A, #8B2BE2)" : "rgba(255,255,255,0.08)",
+                  color: i < referredCount ? "#fff" : "rgba(255,255,255,0.2)",
+                  border: i < referredCount ? "none" : "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                {i < referredCount ? "✓" : i + 1}
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] mb-2" style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.4)" }}>
+            {referredCount}/{nextMilestone} friends signed up
+          </p>
+          <button
+            onClick={handleShareReferral}
+            className="w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+            style={{
+              background: "linear-gradient(135deg, #8B2BE2, #FF3D9A)",
+              color: "#fff",
+              fontFamily: "'Fredoka One', sans-serif",
+            }}
+          >
+            <Share2 size={14} />
+            Share referral link
+          </button>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="text-sm font-bold"
+          style={{ fontFamily: "Nunito, sans-serif", color: "rgba(255,255,255,0.35)" }}
+        >
+          Maybe later
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── OUT-OF-PICKS MODAL ───────────────────────────────────────────────────────
 
-function OutOfPicksModal({ picksUsed, onClose }: { picksUsed: number; onClose: () => void }) {
-  const shareText = `I just played ${picksUsed} picks on Swipestakes! 🎯 Join me and earn gift cards for free picks daily. swipebet-b8qgntrw.manus.space`;
+function OutOfPicksModal({ picksUsed, onClose, onBuyMore }: { picksUsed: number; onClose: () => void; onBuyMore: () => void }) {
+  const shareText = `I just played ${picksUsed} picks on Swipestakes! 🎯 Join me and earn gift cards for free picks daily. swipestakes.vercel.app`;
 
   const handleShare = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'Swipestakes', text: shareText, url: 'https://swipebet-b8qgntrw.manus.space' });
+        await navigator.share({ title: 'Swipestakes', text: shareText, url: 'https://swipestakes.vercel.app' });
       } else {
         await navigator.clipboard.writeText(shareText);
-        // toast would need import — use alert as fallback
-        alert('Link copied! Share it with friends 🎉');
+        toast.success("Link copied!");
       }
     } catch (_) { /* user cancelled */ }
   };
@@ -538,21 +678,35 @@ function OutOfPicksModal({ picksUsed, onClose }: { picksUsed: number; onClose: (
           </div>
         </div>
 
-        {/* Share CTA */}
+        {/* Get more picks */}
         <button
-          onClick={handleShare}
+          onClick={onBuyMore}
           className="w-full py-3.5 rounded-2xl text-center font-bold text-sm flex items-center justify-center gap-2 mb-3"
           style={{
-            background: 'linear-gradient(135deg, #FF3D9A, #FFD700)',
-            color: '#1a0a3d',
-            boxShadow: '0 4px 0 rgba(0,0,0,0.3), 0 6px 20px rgba(255,61,154,0.4)',
+            background: 'linear-gradient(135deg, #00D4AA, #00B894)',
+            color: '#fff',
+            boxShadow: '0 4px 0 rgba(0,80,60,0.5), 0 6px 20px rgba(0,212,170,0.4)',
             fontFamily: "'Fredoka One', sans-serif",
             letterSpacing: '0.04em',
             fontSize: '1rem',
           }}
         >
-          <Share2 size={16} />
-          Share with friends 🎉
+          <Zap size={16} />
+          Get 5 More Picks
+        </button>
+
+        <button
+          onClick={handleShare}
+          className="w-full py-3 rounded-2xl text-center font-bold text-sm flex items-center justify-center gap-2 mb-3"
+          style={{
+            background: 'rgba(255,255,255,0.08)',
+            color: 'rgba(255,255,255,0.7)',
+            fontFamily: "'Fredoka One', sans-serif",
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}
+        >
+          <Share2 size={14} />
+          Share with friends
         </button>
 
         <button
@@ -872,6 +1026,7 @@ export default function HomeFeed() {
   const [swipeResult, setSwipeResult] = useState<{ label: string; color: string } | null>(null);
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [showOutOfPicks, setShowOutOfPicks] = useState(false);
+  const [showBuyPicks, setShowBuyPicks] = useState(false);
   const [allDone, setAllDone] = useState(false);
   const [picksUsed, setPicksUsed] = useState(0);
   const guestSwipesRef = useRef(0);
@@ -1431,11 +1586,24 @@ export default function HomeFeed() {
             </motion.div>
             <button
               type="button"
-              onClick={() => void handleRefresh()}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold candy-btn candy-btn-teal"
-              style={{ fontFamily: "'Fredoka One', sans-serif" }}
+              onClick={() => setShowBuyPicks(true)}
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold text-white mb-3"
+              style={{
+                fontFamily: "'Fredoka One', sans-serif",
+                background: "linear-gradient(135deg, #00D4AA, #00B894)",
+                boxShadow: "0 4px 0 rgba(0,80,60,0.5), 0 6px 20px rgba(0,212,170,0.4)",
+              }}
             >
-              <RotateCcw size={16} />
+              <Zap size={16} />
+              Get 5 More Picks
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleRefresh()}
+              className="flex items-center gap-2 px-5 py-2 rounded-2xl text-xs font-bold text-gray-400"
+              style={{ fontFamily: "Nunito, sans-serif" }}
+            >
+              <RotateCcw size={14} />
               Refresh status
             </button>
           </div>
@@ -1589,6 +1757,24 @@ export default function HomeFeed() {
             <OutOfPicksModal
               picksUsed={picksUsed}
               onClose={() => { setShowOutOfPicks(false); setAllDone(true); }}
+              onBuyMore={() => { setShowOutOfPicks(false); setShowBuyPicks(true); }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Buy more picks modal */}
+        <AnimatePresence>
+          {showBuyPicks && (
+            <BuyPicksModal
+              onClose={() => setShowBuyPicks(false)}
+              onPurchased={() => {
+                setShowBuyPicks(false);
+                setAllDone(false);
+                setCurrentIndex(0);
+                setStagedPicks([]);
+                void refetchStatus();
+                void refetchMarkets();
+              }}
             />
           )}
         </AnimatePresence>

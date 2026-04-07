@@ -7,6 +7,7 @@ import { ingestMarkets, getActiveMarkets, type MarketCard } from "./betIngestion
 import { stripeRouter } from "./stripeRouter";
 import { creditsRouter } from "./creditsRouter";
 import { loyaltyRouter } from "./loyaltyRouter";
+import { referralRouter } from "./referralRouter";
 import { ingestClips, getClips } from "./videoFeed";
 import { getDb } from "./db";
 import {
@@ -535,6 +536,7 @@ export const appRouter = router({
   stripe: stripeRouter,
   credits: creditsRouter,
   loyalty: loyaltyRouter,
+  referral: referralRouter,
   // Legacy alias — old frontend calls to trpc.bets.* still work
   bets: marketsRouter,
 });

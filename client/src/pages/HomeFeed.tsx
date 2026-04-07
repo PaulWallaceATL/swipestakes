@@ -1137,7 +1137,7 @@ export default function HomeFeed() {
     }
     const live = marketsData?.markets ?? [];
     if (isAuthenticated) {
-      return live.length > 0 ? (live as any[]) : ([] as any[]);
+      return live as any[];
     }
     if (live.length >= 5) return live as any[];
     const liveIds = new Set(live.map((m: any) => m.id));

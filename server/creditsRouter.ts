@@ -196,8 +196,8 @@ export const creditsRouter = router({
 
     let allMarkets = await queryMarkets();
 
-    // If fewer than 5 markets in DB, trigger live ingestion and retry once
-    if (allMarkets.length < 5) {
+    // Only trigger slow external ingestion when no filter is active and we're short on markets
+    if (!categoryFilter && allMarkets.length < 5) {
       try {
         const { ingestMarkets } = await import('./betIngestion');
         await ingestMarkets();

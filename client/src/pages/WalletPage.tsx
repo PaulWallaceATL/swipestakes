@@ -20,12 +20,12 @@ const CREDIT_RULES = [
 ];
 
 const GIFT_CATALOG = [
-  { id: 'amazon-5',    name: 'Amazon',    value: '$5',  credits: 50,  emoji: '🛒', color: '#FF9900' },
-  { id: 'starbucks-5', name: 'Starbucks', value: '$5',  credits: 50,  emoji: '☕', color: '#00704A' },
-  { id: 'amazon-10',   name: 'Amazon',    value: '$10', credits: 100, emoji: '🛒', color: '#FF9900' },
-  { id: 'doordash-10', name: 'DoorDash',  value: '$10', credits: 100, emoji: '🍕', color: '#FF3008' },
-  { id: 'amazon-25',   name: 'Amazon',    value: '$25', credits: 250, emoji: '🛒', color: '#FF9900' },
-  { id: 'visa-25',     name: 'Visa',      value: '$25', credits: 250, emoji: '💳', color: '#1A1F71' },
+  { id: 'amazon',    name: 'Amazon',    value: '$50', credits: 250, emoji: '🛒', color: '#FF9900' },
+  { id: 'starbucks', name: 'Starbucks', value: '$50', credits: 250, emoji: '☕', color: '#00704A' },
+  { id: 'target',    name: 'Target',    value: '$50', credits: 250, emoji: '🎯', color: '#CC0000' },
+  { id: 'nike',      name: 'Nike',      value: '$50', credits: 250, emoji: '👟', color: '#111111' },
+  { id: 'netflix',   name: 'Netflix',   value: '$50', credits: 250, emoji: '🎬', color: '#E50914' },
+  { id: 'visa',      name: 'Visa',      value: '$50', credits: 250, emoji: '💳', color: '#1A1F71' },
 ];
 
 const MOCK_TRANSACTIONS = [

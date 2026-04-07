@@ -125,8 +125,10 @@ export const creditsRouter = router({
     };
   }),
 
-  // Get today's 5 daily markets (binary/over-under only)
-  getDailyMarkets: protectedProcedure.query(async ({ ctx }) => {
+  getDailyMarkets: protectedProcedure
+    .input(z.object({ category: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+    const categoryFilter = input?.category ?? null;
     const db = await getDb();
     if (!db) {
       throw new TRPCError({
@@ -183,6 +185,9 @@ export const creditsRouter = router({
           sql`markets."tradingCloseAt" IS NOT NULL`,
           sql`markets."tradingCloseAt" >= NOW()`,
           sql`markets."tradingCloseAt" <= NOW() + INTERVAL '7 days'`,
+          ...(categoryFilter
+            ? [sql`events.category = ${categoryFilter}::text`]
+            : []),
         ),
       )
       // Deterministic per game-calendar day (Postgres; same board for web + native)

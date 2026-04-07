@@ -1029,6 +1029,7 @@ export default function HomeFeed() {
   const [showBuyPicks, setShowBuyPicks] = useState(false);
   const [allDone, setAllDone] = useState(false);
   const [picksUsed, setPicksUsed] = useState(0);
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>(undefined);
   const guestSwipesRef = useRef(0);
 
   /**
@@ -1048,10 +1049,10 @@ export default function HomeFeed() {
     retry: 2,
   });
 
-  const { data: marketsData, refetch: refetchMarkets, isError: marketsError } = trpc.credits.getDailyMarkets.useQuery(undefined, {
-    enabled: isAuthenticated,
-    retry: 2,
-  });
+  const { data: marketsData, refetch: refetchMarkets, isError: marketsError } = trpc.credits.getDailyMarkets.useQuery(
+    categoryFilter ? { category: categoryFilter } : undefined,
+    { enabled: isAuthenticated, retry: 2 },
+  );
   const { data: loyaltyData, refetch: refetchLoyalty } = trpc.loyalty.getStats.useQuery(undefined, {
     enabled: isAuthenticated,
   });
@@ -1079,7 +1080,7 @@ export default function HomeFeed() {
 
   useEffect(() => {
     if (!marketsData || !isAuthenticated) return;
-    if (marketsData.picksUsed >= 5) {
+    if (marketsData.picksUsed >= (marketsData.totalPicksAllowed ?? 5)) {
       setAllDone(true);
       setShowOutOfPicks(false);
       setStagedPicks([]);
@@ -1128,39 +1129,31 @@ export default function HomeFeed() {
     },
   });
 
-  // Signed-in users only see real markets from the API — never mock cards (mock IDs don't persist to daily_picks).
+  const totalAllowed = statusData?.totalPicksAllowed ?? marketsData?.totalPicksAllowed ?? 5;
+
   const displayPicks = useMemo(() => {
-    if (
-      isAuthenticated &&
-      ((statusData?.picksRemaining ?? 5) === 0 || (marketsData?.picksUsed ?? 0) >= 5)
-    ) {
+    if (isAuthenticated && (statusData?.picksRemaining ?? 5) === 0) {
       return [] as any[];
     }
     const live = marketsData?.markets ?? [];
     if (isAuthenticated) {
-      return live.length >= 5 ? (live as any[]) : ([] as any[]);
+      return live.length > 0 ? (live as any[]) : ([] as any[]);
     }
     if (live.length >= 5) return live as any[];
     const liveIds = new Set(live.map((m: any) => m.id));
     const mockFill = MOCK_PICKS.filter(m => !liveIds.has(m.id));
     return [...live, ...mockFill].slice(0, 20) as any[];
-  }, [isAuthenticated, marketsData, statusData?.picksRemaining, marketsData?.picksUsed]);
+  }, [isAuthenticated, marketsData, statusData?.picksRemaining]);
 
   const balance = isAuthenticated ? (statusData?.balance ?? 0) : 0;
 
-  /** True when server says today's PICK5 board is finished (status and/or markets query). */
   const dailyPick5Locked =
-    isAuthenticated &&
-    (statusData?.picksRemaining === 0 ||
-      (statusData?.picksUsed ?? 0) >= 5 ||
-      (marketsData?.picksUsed ?? 0) >= 5);
+    isAuthenticated && statusData?.picksRemaining === 0;
 
   const picksLeft = useGuestPick5Flow
     ? Math.max(0, 5 - guestSwipesRef.current)
     : isAuthenticated
-      ? dailyPick5Locked
-        ? 0
-        : (statusData?.picksRemaining ?? 5)
+      ? (statusData?.picksRemaining ?? 5)
       : 5;
 
   const sessionCompleted = useGuestPick5Flow ? guestSwipesRef.current : stagedPicks.length;
@@ -1284,7 +1277,7 @@ export default function HomeFeed() {
         return;
       }
       const locked =
-        s.picksRemaining === 0 || s.picksUsed >= 5 || m.picksUsed >= 5;
+        s.picksRemaining === 0;
       if (locked) {
         setAllDone(true);
         setShowOutOfPicks(false);
@@ -1443,7 +1436,7 @@ export default function HomeFeed() {
                 ? "Today's PICK5 is done — next board after daily reset ✨"
                 : pick5RoundDone
                   ? "Round complete — nice! ✨"
-                  : `Pick ${pick5ActiveGem ?? 1} of 5 — ${picksLeft} left today`}
+                  : `Pick ${pick5ActiveGem ?? 1} of ${totalAllowed} — ${picksLeft} left today`}
             </p>
           </div>
 
@@ -1486,6 +1479,39 @@ export default function HomeFeed() {
               </p>
             </div>
           )}
+
+          {/* Category filter chips */}
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {[
+              { id: undefined, label: "All" },
+              { id: "sports", label: "Sports" },
+              { id: "finance", label: "Finance" },
+              { id: "politics", label: "Politics" },
+              { id: "tech", label: "Tech" },
+              { id: "entertainment", label: "Entertainment" },
+              { id: "daily", label: "Daily" },
+              { id: "science", label: "Science" },
+            ].map((c) => (
+              <button
+                key={c.label}
+                type="button"
+                onClick={() => {
+                  setCategoryFilter(c.id);
+                  setCurrentIndex(0);
+                  setStagedPicks([]);
+                }}
+                className="flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-bold transition-all"
+                style={{
+                  background: categoryFilter === c.id ? "linear-gradient(135deg, #FF3D9A, #8B2BE2)" : "rgba(0,0,0,0.04)",
+                  color: categoryFilter === c.id ? "#fff" : "#888",
+                  border: categoryFilter === c.id ? "none" : "1px solid rgba(0,0,0,0.06)",
+                  fontFamily: "'Fredoka One', sans-serif",
+                }}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="flex-shrink-0 px-4 pt-3 pb-3 bg-white border-b border-[#EBEBEB]">
@@ -1516,7 +1542,7 @@ export default function HomeFeed() {
           </div>
           <Pick5Progress filled={pick5GemsFilled} activeIndex={pick5ActiveGem} />
           <p className="text-center text-[11px] font-bold text-gray-600 mt-1.5" style={{ fontFamily: "Nunito, sans-serif" }}>
-            {pick5RoundDone ? "All 5 done — unlock your account next ✨" : `Pick ${pick5ActiveGem ?? 1} of 5`}
+            {pick5RoundDone ? "All done — sign up to save!" : `Pick ${pick5ActiveGem ?? 1} of 5`}
           </p>
           <p className="text-center text-[10px] text-gray-400 mt-1" style={{ fontFamily: "Nunito, sans-serif" }}>
             Swipe the card or use the buttons underneath
@@ -1767,13 +1793,14 @@ export default function HomeFeed() {
           {showBuyPicks && (
             <BuyPicksModal
               onClose={() => setShowBuyPicks(false)}
-              onPurchased={() => {
+              onPurchased={async () => {
                 setShowBuyPicks(false);
+                setShowOutOfPicks(false);
                 setAllDone(false);
                 setCurrentIndex(0);
                 setStagedPicks([]);
-                void refetchStatus();
-                void refetchMarkets();
+                setPicksUsed(0);
+                await Promise.all([refetchStatus(), refetchMarkets()]);
               }}
             />
           )}

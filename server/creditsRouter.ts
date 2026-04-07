@@ -186,7 +186,7 @@ export const creditsRouter = router({
           sql`markets."tradingCloseAt" >= NOW()`,
           sql`markets."tradingCloseAt" <= NOW() + INTERVAL '7 days'`,
           ...(categoryFilter
-            ? [sql`events.category = ${categoryFilter}::text`]
+            ? [sql`events.category = ${sql.raw(`'${categoryFilter.replace(/'/g, "''")}'`)}`]
             : []),
         ),
       )
